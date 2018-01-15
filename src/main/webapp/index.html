@@ -1,0 +1,71 @@
+<html>
+  <head>
+    <meta name="ROBOTS" content="INDEX,NOFOLLOW" />
+    <title>Squirrel</title>
+    <link rel="icon" href="/images/logo.png" type="image/png" />
+    <link rel="stylesheet" href="/css/squirrel.css" type="text/css" />
+  </head>
+  <body ng-app="squirrelApp" ng-controller="squirrelCtrl">
+    <table id="header">
+     <tr>
+      <td id="header-left">
+       <img src="/images/logo.png" alt="Logo" />
+       <div id="header-name">{{squirrelName}}</div>
+       <div id="header-version">{{squirrelVersion}}</div>
+      </td>
+      <td id="header-center">
+       <div id="header-rounded-corner"></div>
+      </td>
+      <td id="header-right">
+       <div id="header-spacer"></div>
+      </td>
+     </tr>
+    </table>
+    <table id="main-table">
+     <tr>
+      <td id="side-panel">
+        <div id="tasks">
+         <div class="task">
+          <a href="/view/All/newJob"><img src="/images/new-package.png" alt="" />New job</a>
+         </div>
+         <div class="task">
+          <a href="/settings"><img src="/images/setting.png" alt="" />Settings</a>
+         </div>
+         <div class="task">
+          <a href="/people/"><img src="/images/user.png" alt="" />People</a>
+         </div>
+         <div class="task">
+          <a href="/builds"><img src="/images/graph.png" alt="" />Build history</a>
+         </div>
+        </div>
+        <div id="builds">
+         <div id="builds-title">Build queue</div>
+         <div class="build">...</div>
+         <div class="build">No builds in the queue.</div>
+        </div>
+      </td>
+      <td id="main-panel">
+        <div id="jobs">
+         <div id="jobs-title">Jobs Status</div>
+         <div class="job">Job #1</div>
+         <div class="job">Job #2</div>
+         <div class="job" ng-repeat="job in jobsList">{{job}}</div>
+        </div>
+      </td>
+     </tr>
+    </table>
+    <table id="footer">
+      <tr>
+        <td id="footer-left"  >Powered by {{engineName}} {{engineVersion}}</td>
+        <td id="footer-center"></td>
+        <td id="footer-right" ></td>
+      </tr>
+    </table>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+    <script src="/scripts/version.js"></script>
+    <!-- script src="/scripts/jobs.js"></script -->
+    <script>
+      document.getElementById("footer-right").innerHTML = "Page generated at " + new Date().toString();
+    </script>
+  </body>
+</html>

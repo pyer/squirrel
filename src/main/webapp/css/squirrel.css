@@ -1,0 +1,158 @@
+/*******************************************************************************
+ *
+ *******************************************************************************/
+
+body {
+    margin: 0;
+    padding: 0;
+    border: none;
+    color: black;
+    background-color: white;
+    width: 100%;
+    font-family: Verdana, Helvetica, sans serif;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+table {
+    border-collapse: collapse;
+    border: 0;
+}
+
+img {
+    vertical-align: middle;
+    border: 0;
+}
+
+#header {
+    color: white;
+    vertical-align: text-top;
+    background-image:url(/images/header-bar.png);
+    background-repeat:repeat-x;
+    width: 100%;
+    padding: 0;
+}
+
+#header-left {
+    width: 360px;
+    padding: 4px;
+}
+
+#header-center {
+    width: 27px;
+    padding-top: 42px;
+}
+
+#header-right {
+    padding-top: 42px;
+}
+
+#header-name {
+    font-size:32px;
+    display: inline;
+}
+
+#header-version {
+    font-size:10px;
+    display: inline;
+}
+
+#header-rounded-corner{
+    height:60px;
+    background-image:url(/images/top-left-round.png);
+    background-repeat:no-repeat;
+}
+
+#header-spacer {
+    height:60px;
+    background-image:url(/images/spacer.png);
+    background-repeat:repeat-x;
+    margin-left: -2px;
+}
+
+#side-panel {
+    padding: 4px;
+    width: 360px;
+}
+
+#main-panel {
+    padding: 0px 0px 0px 30px;
+    margin: 0;
+}
+
+#footer {
+    font-size: 10px;
+    padding: 0px 10px 0px 10px;
+    color: white;
+    background: linear-gradient(to bottom,  #b69cc5 0%,#b094c1 50%,#7d769a 100%); /* W3C */
+    width: 100%;
+    border-image-width: 0;
+}
+
+#footer-left {
+    text-align: left;
+    width: 40%;
+}
+
+#footer-center {
+    text-align: center;
+    width: 20%;
+}
+
+#footer-right {
+    text-align: right;
+    width: 40%;
+}
+
+
+/* ========================= Tasks pane     ========================= */
+
+#tasks {
+    padding: 4px 4px 3px 12px;
+}
+
+.task {
+    margin-bottom: 10px;
+}
+
+/* ========================= Builds pane    ========================= */
+
+#builds {
+    font-size: 12px;
+    border: 1px solid #d4bde6;
+    border-radius: 4px;
+    padding: 2px;
+    margin: 10px 15px 20px 15px;
+}
+
+#builds-title {
+    font-weight: bold;
+    color: #7b5495;
+    background-color: #eee;
+    padding: 4px 4px 3px 12px;
+}
+
+.build {
+    padding: 4px 4px 3px 12px;
+}
+
+/* ========================= Jobs pane      ========================= */
+
+#jobs {
+}
+
+#jobs-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #7b5495;
+    margin: 10px;
+}
+
+.job {
+    font-size: 12px;
+    border: 1px solid #d4bde6;
+    border-radius: 4px;
+    padding: 8px;
+    margin: 10px;
+}
+
