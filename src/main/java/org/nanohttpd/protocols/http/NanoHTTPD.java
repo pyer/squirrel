@@ -32,6 +32,7 @@ package org.nanohttpd.protocols.http;
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  * #L%
  */
+ import ab.logging.Log;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -365,6 +366,8 @@ public abstract class NanoHTTPD {
     public NanoHTTPD(String hostname, int port) {
         this.hostname = hostname;
         this.myPort = port;
+        Log.init(LOG);
+
         setTempFileManagerFactory(new DefaultTempFileManagerFactory());
         setAsyncRunner(new DefaultAsyncRunner());
 

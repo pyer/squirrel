@@ -14,11 +14,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.nanohttpd</groupId>
-			<artifactId>nanohttpd</artifactId>
-      <version>${nanohttpd.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>4.4.1</version>

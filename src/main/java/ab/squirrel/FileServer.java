@@ -1,5 +1,10 @@
 package ab.squirrel;
 
+import ab.logging.Log;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,9 +24,6 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.StringTokenizer;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.nanohttpd.protocols.http.IHTTPSession;
 import org.nanohttpd.protocols.http.NanoHTTPD;
 import org.nanohttpd.protocols.http.request.Method;
@@ -29,77 +31,21 @@ import org.nanohttpd.protocols.http.response.IStatus;
 import org.nanohttpd.protocols.http.response.Response;
 import org.nanohttpd.protocols.http.response.Status;
 
-public class WebServer extends NanoHTTPD {
+public class FileServer {
 
     /**
      * logger to log to.
      */
-    public static final Logger LOG = Logger.getLogger(WebServer.class.getName());
+    public static final Logger LOG = Logger.getLogger(FileServer.class.getName());
 
-    private final String  root;
-
-    public WebServer(String host, int port, String webroot) {
-      super(host, port);
-      this.root = webroot;
+    public FileServer() {
+      // Initialize logger
+      Log.init(LOG);
     }
 
-    @Override
-    public Response serve(IHTTPSession session) {
-        Map<String, String> header = session.getHeaders();
-        Map<String, String> parms = session.getParms();
-        String uri = session.getUri();
-
-        LOG.info(session.getMethod() + " '" + uri + "' ");
-
-        if (LOG.getLevel() == Level.FINE) {
-            Iterator<String> e = header.keySet().iterator();
-            while (e.hasNext()) {
-                String value = e.next();
-                LOG.fine("  HDR: '" + value + "' = '" + header.get(value) + "'");
-            }
-            e = parms.keySet().iterator();
-            while (e.hasNext()) {
-                String value = e.next();
-                LOG.fine("  PRM: '" + value + "' = '" + parms.get(value) + "'");
-            }
-        }
-        return defaultRespond(Collections.unmodifiableMap(header), uri);
-    }
-
-    protected Response getForbiddenResponse(String s) {
-        return Response.newFixedLengthResponse(Status.FORBIDDEN, NanoHTTPD.MIME_PLAINTEXT, "FORBIDDEN: " + s);
-    }
-
-    protected Response getInternalErrorResponse(String s) {
-        return Response.newFixedLengthResponse(Status.INTERNAL_ERROR, NanoHTTPD.MIME_PLAINTEXT, "INTERNAL ERROR: " + s);
-    }
-
-    protected Response getNotFoundResponse() {
-        return Response.newFixedLengthResponse(Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT, "Error 404, file not found.");
-    }
-
-    private Response defaultRespond(Map<String, String> header, String uri) {
+    public Response getResponse(Map<String, String> header, String uri, String mime, String root) {
         Response res;
         File file = new File(root, uri);
-        String mime = getMimeTypeForFile(uri);
-        // Remove URL arguments
-        uri = uri.trim().replace(File.separatorChar, '/');
-        if (uri.indexOf('?') >= 0) {
-            uri = uri.substring(0, uri.indexOf('?'));
-        }
-        if ("".equals(uri) || "/".equals(uri)) {
-            uri = "/index.html";
-            res = Response.newFixedLengthResponse(Status.REDIRECT, NanoHTTPD.MIME_HTML,
-                  "<html><body>Redirected: <a href=\"" + uri + "\">" + uri + "</a></body></html>");
-            res.addHeader("Accept-Ranges", "bytes");
-            res.addHeader("Location", uri);
-            return res;
-        }
-
-        // Prohibit getting out of current directory
-        if (uri.contains("../")) {
-            return getForbiddenResponse("Won't serve ../ for security reasons.");
-        }
 
         // Serves file from root directory.
         // Uses only URI, ignores all headers and HTTP parameters.
@@ -200,10 +146,8 @@ public class WebServer extends NanoHTTPD {
                 }
             }
         } catch (IOException ioe) {
-            res = getForbiddenResponse("Reading file failed.");
+            res = null;
         }
-
         return res;
     }
-
 }

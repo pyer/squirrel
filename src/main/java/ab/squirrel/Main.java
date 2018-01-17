@@ -1,10 +1,20 @@
 package ab.squirrel;
 
-import ab.squirrel.WebServer;
+import ab.logging.Log;
+
+import ab.squirrel.HttpServer;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.nanohttpd.protocols.http.NanoHTTPD;
 
 public class Main {
+    /**
+     * logger to log to.
+     */
+    public static final Logger LOG = Logger.getLogger(Main.class.getName());
+
     /**
      * Starts as a standalone file server and waits for Enter.
      */
@@ -13,16 +23,18 @@ public class Main {
         int port = 8080;
         String host = null; // bind to all interfaces by default
         String home = "target/webapp";
+        // Initialize logger
+        Log.init(LOG);
 
-        NanoHTTPD server = new WebServer(host, port, home);
+        NanoHTTPD server = new HttpServer(host, port, home);
         try {
             server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
         } catch (IOException ioe) {
-            System.err.println("Couldn't start server:\n" + ioe);
+            LOG.severe("Couldn't start server: " + ioe);
             System.exit(-1);
         }
 
-        System.out.println("Server started, Hit Enter to stop.\n");
+        LOG.info("Server started, Hit Enter to stop.");
 
         try {
             System.in.read();
@@ -30,7 +42,7 @@ public class Main {
         }
 
         server.stop();
-        System.out.println("Server stopped.\n");
+        LOG.info("Server stopped.");
     }
 
 }
