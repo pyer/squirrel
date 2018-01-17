@@ -33,16 +33,6 @@ import org.nanohttpd.protocols.http.response.Status;
 
 public class FileServer {
 
-    /**
-     * logger to log to.
-     */
-    public static final Logger LOG = Logger.getLogger(FileServer.class.getName());
-
-    public FileServer() {
-      // Initialize logger
-      Log.init(LOG);
-    }
-
     public Response getResponse(Map<String, String> header, String uri, String mime, String root) {
         Response res;
         File file = new File(root, uri);
@@ -52,7 +42,7 @@ public class FileServer {
         try {
             // Calculate etag
             String etag = Integer.toHexString((file.getAbsolutePath() + file.lastModified() + "" + file.length()).hashCode());
-            LOG.info("READ FILE '" + file.getAbsolutePath() + "' ");
+            Main.LOG.info("READ FILE '" + file.getAbsolutePath() + "' ");
 
             // Support (simple) skipping:
             long startFrom = 0;

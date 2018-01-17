@@ -25,6 +25,8 @@ public class Main {
         String home = "target/webapp";
         // Initialize logger
         Log.init(LOG);
+        LOG.info("Home directory is '"+home+"'");
+        LOG.info("Server listening on port "+port);
 
         NanoHTTPD server = new HttpServer(host, port, home);
         try {

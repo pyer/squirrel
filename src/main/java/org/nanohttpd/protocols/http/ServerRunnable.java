@@ -59,6 +59,7 @@ public class ServerRunnable implements Runnable {
 
     @Override
     public void run() {
+        NanoHTTPD.LOG.info("Running...");
         try {
             httpd.getMyServerSocket().bind(httpd.hostname != null ? new InetSocketAddress(httpd.hostname, httpd.myPort) : new InetSocketAddress(httpd.myPort));
             hasBinded = true;

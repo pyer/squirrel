@@ -34,18 +34,11 @@ import org.nanohttpd.protocols.http.response.Status;
 
 public class HttpServer extends NanoHTTPD {
 
-    /**
-     * logger to log to.
-     */
-    public static final Logger LOG = Logger.getLogger(HttpServer.class.getName());
-
     private final String  root;
 
     public HttpServer(String host, int port, String webroot) {
       super(host, port);
       this.root = webroot;
-      // Initialize logger
-      Log.init(LOG);
     }
 
     @Override
@@ -53,25 +46,25 @@ public class HttpServer extends NanoHTTPD {
         Map<String, String> header = session.getHeaders();
         Map<String, String> parms = session.getParms();
         String uri = session.getUri();
+        String query = (session.getQueryParameterString() == null) ? "" : "?" + session.getQueryParameterString();
+        Main.LOG.info(session.getMethod() + " " + uri + query);
 
-        LOG.info(session.getMethod() + " " + uri + "?" + session.getQueryParameterString());
-
-        if (LOG.getLevel() == Level.FINE) {
+        if (Main.LOG.getLevel() == Level.FINE) {
             Iterator<String> e = header.keySet().iterator();
             while (e.hasNext()) {
                 String value = e.next();
-                LOG.fine("  HDR: '" + value + "' = '" + header.get(value) + "'");
+                Main.LOG.fine("  HDR: '" + value + "' = '" + header.get(value) + "'");
             }
             e = parms.keySet().iterator();
             while (e.hasNext()) {
                 String value = e.next();
-                LOG.fine("  PRM: '" + value + "' = '" + parms.get(value) + "'");
+                Main.LOG.fine("  PRM: '" + value + "' = '" + parms.get(value) + "'");
             }
         }
 
         // Serve services at first
         if (uri.startsWith("/service/")) {
-            LOG.info("SERVICE '" + uri + "' ");
+            Main.LOG.info("SERVICE '" + uri + "' ");
             return getForbiddenResponse("Not implemented.");
         }
         // Redirect to home page
