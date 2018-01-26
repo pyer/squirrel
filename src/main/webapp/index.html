@@ -10,8 +10,8 @@
      <tr>
       <td id="header-left">
        <img src="/images/logo.png" alt="Logo" />
-       <div id="header-name">{{squirrelName}}</div>
-       <div id="header-version">{{squirrelVersion}}</div>
+       <div id="header-name">{{name}}</div>
+       <div id="header-version">{{version}}</div>
       </td>
       <td id="header-center">
        <div id="header-rounded-corner"></div>
@@ -26,7 +26,7 @@
       <td id="side-panel">
         <div id="tasks">
          <div class="task">
-          <a href="/view/All/newJob"><img src="/images/new-package.png" alt="" />New job</a>
+          <a href="/view/All/newProject"><img src="/images/new-package.png" alt="" />New project</a>
          </div>
          <div class="task">
           <a href="/settings"><img src="/images/setting.png" alt="" />Settings</a>
@@ -45,25 +45,22 @@
         </div>
       </td>
       <td id="main-panel">
-        <div id="jobs">
-         <div id="jobs-title">Jobs Status</div>
-         <div class="job">Job #1</div>
-         <div class="job">Job #2</div>
-         <div class="job" ng-repeat="job in jobsList">{{job}}</div>
+        <div id="projects">
+         <div id="projects-title">Projects</div>
+         <div class="project" ng-repeat="project in projects">{{project}}</div>
         </div>
       </td>
      </tr>
     </table>
     <table id="footer">
       <tr>
-        <td id="footer-left"  >Powered by {{engineName}} {{engineVersion}}</td>
+        <td id="footer-left"  >Powered by NanoHTTPD</td>
         <td id="footer-center"></td>
         <td id="footer-right" ></td>
       </tr>
     </table>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
-    <script src="/scripts/version.js"></script>
-    <!-- script src="/scripts/jobs.js"></script -->
+    <script src="/scripts/angular.min.js"></script>
+    <script src="/scripts/squirrel.js"></script>
     <script>
       document.getElementById("footer-right").innerHTML = "Page generated at " + new Date().toString();
     </script>

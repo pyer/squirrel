@@ -43,7 +43,7 @@
               <outputDirectory>${basedir}/target/webapp</outputDirectory>
               <resources>
                 <resource>
-                  <directory>src/main/filtered</directory>
+                  <directory>src/main/resources</directory>
                   <filtering>true</filtering>
                 </resource>
                 <resource>

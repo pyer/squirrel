@@ -136,19 +136,19 @@ img {
     padding: 4px 4px 3px 12px;
 }
 
-/* ========================= Jobs pane      ========================= */
+/* ========================= Projects pane  ========================= */
 
-#jobs {
+#projects {
 }
 
-#jobs-title {
+#projects-title {
     font-size: 18px;
     font-weight: bold;
     color: #7b5495;
     margin: 10px;
 }
 
-.job {
+.project {
     font-size: 12px;
     border: 1px solid #d4bde6;
     border-radius: 4px;
