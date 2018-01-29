@@ -5,13 +5,13 @@
     <link rel="icon" href="/images/logo.png" type="image/png" />
     <link rel="stylesheet" href="/css/squirrel.css" type="text/css" />
   </head>
-  <body ng-app="squirrelApp" ng-controller="squirrelCtrl">
+  <body ng-app="squirrelApp">
     <table id="header">
      <tr>
       <td id="header-left">
        <img src="/images/logo.png" alt="Logo" />
-       <div id="header-name">{{name}}</div>
-       <div id="header-version">{{version}}</div>
+       <div id="header-name">${project.name}</div>
+       <div id="header-version">${project.version}</div>
       </td>
       <td id="header-center">
        <div id="header-rounded-corner"></div>
@@ -26,16 +26,16 @@
       <td id="side-panel">
         <div id="tasks">
          <div class="task">
-          <a href="/view/All/newProject"><img src="/images/new-package.png" alt="" />New project</a>
+          <a href="#!projects"><img src="/images/24x24/terminal.png" alt="" />Projects</a>
          </div>
          <div class="task">
-          <a href="/settings"><img src="/images/setting.png" alt="" />Settings</a>
+          <a href="#!settings"><img src="/images/24x24/setting.png" alt="" />Settings</a>
          </div>
          <div class="task">
-          <a href="/people/"><img src="/images/user.png" alt="" />People</a>
+          <a href="#!people"><img src="/images/24x24/user.png" alt="" />People</a>
          </div>
          <div class="task">
-          <a href="/builds"><img src="/images/graph.png" alt="" />Build history</a>
+          <a href="#!builds"><img src="/images/24x24/graph.png" alt="" />Build history</a>
          </div>
         </div>
         <div id="builds">
@@ -45,10 +45,7 @@
         </div>
       </td>
       <td id="main-panel">
-        <div id="projects">
-         <div id="projects-title">Projects</div>
-         <div class="project" ng-repeat="project in projects">{{project}}</div>
-        </div>
+        <div ng-view></div>
       </td>
      </tr>
     </table>
@@ -59,7 +56,8 @@
         <td id="footer-right" ></td>
       </tr>
     </table>
-    <script src="/scripts/angular.min.js"></script>
+    <script src="/angular/angular.min.js"></script>
+    <script src="/angular/angular-route.min.js"></script>
     <script src="/scripts/squirrel.js"></script>
     <script>
       document.getElementById("footer-right").innerHTML = "Page generated at " + new Date().toString();
