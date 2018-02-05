@@ -22,9 +22,9 @@ so you can control the amount of information emitted from the logger without hav
 public class Log {
 
   public static void init(Logger logger) {
-    OneLineFormatter olFormatter = new OneLineFormatter();
+    OneLineFormatter oneLineFormatter = new OneLineFormatter();
     Handler consoleHandler = new ConsoleHandler();
-    consoleHandler.setFormatter(olFormatter);
+    consoleHandler.setFormatter(oneLineFormatter);
     consoleHandler.setLevel(Level.ALL);
     logger.addHandler(consoleHandler);
     logger.setUseParentHandlers(false);
