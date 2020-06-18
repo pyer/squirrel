@@ -23,15 +23,9 @@ app.config(function($routeProvider) {
 });
 
 app.controller('projectsCtrl', function($scope,$http) {
-    $scope.jobsList = [
-        "Alfreds Futterkiste",
-        "Berglunds snabbköp",
-        "Centro comercial Moctezuma",
-        "Ernst Handel",
-        ];
     $http.get("/data/projects")
             .then(function(response) {
-        $scope.projects = response.data.split('\n');
+        $scope.projectsList = response.data;
+        console.log($scope.projectsList);
     });
-
 });

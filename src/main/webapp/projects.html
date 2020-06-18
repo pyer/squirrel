@@ -1,4 +1,13 @@
 <div id="projects">
- <div id="projects-title">Projects</div>
- <div class="project" ng-repeat="project in projects">{{project}}</div>
+  <div id="projects-title">Projects</div>
+  <table>
+    <tr class="project" ng-repeat="project in projectsList">
+      <td><img src="/images/24x24/{{project.color}}.png"/></td>
+      <td>{{project.name}}</td>
+      <td>{{project.date}}</td>
+      <td>{{project.duration}}</td>
+      <td><a href="#!build/{{project.id}}"><img src="/images/24x24/clock.png"/></a></td>
+      <td><a href="#!report/{{project.id}}"><img src="/images/24x24/notepad.png"/></a></td>
+    </tr>
+  </table>
 </div>

@@ -1,6 +1,7 @@
 package ab.squirrel;
 
 import ab.logging.Log;
+//import ab.squirrel.Build;
 import ab.squirrel.FileServer;
 
 import java.util.logging.Level;
@@ -63,10 +64,18 @@ public class HttpServer extends NanoHTTPD {
         }
 
         // Serve services at first
-        if (uri.startsWith("/service/")) {
-            Main.LOG.info("SERVICE '" + uri + "' ");
-            return getForbiddenResponse("Not implemented.");
+        /*
+        if (uri.startsWith("/build/")) {
+            Build build = new Build(uri);
+            Response res = Response.newFixedLengthResponse(Status.OK, NanoHTTPD.MIME_PLAINTEXT, build.status());
+            return res;
         }
+        if (uri.startsWith("/report/")) {
+            Report report = new Report(uri);
+            Response res = Response.newFixedLengthResponse(Status.OK, NanoHTTPD.MIME_PLAINTEXT, report.status());
+            return res;
+        }
+        */
         // Redirect to home page
         if ("".equals(uri) || "/".equals(uri)) {
             uri = "/index.html";
