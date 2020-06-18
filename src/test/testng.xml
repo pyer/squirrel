@@ -1,0 +1,13 @@
+<suite name="Squirrel test Suite" verbose="0">
+  <test name="ab.logging">
+    <classes>
+      <class name="ab.logging.LogTest" />
+      <class name="ab.logging.OneLineFormatterTest" />
+    </classes>
+  </test>
+  <test name="ab.squirrel">
+    <classes>
+      <class name="ab.squirrel.FileServerTest" />
+    </classes>
+  </test>
+</suite>
