@@ -1,0 +1,66 @@
+<html>
+  <head>
+    <meta name="ROBOTS" content="INDEX,NOFOLLOW" />
+    <title>Squirrel</title>
+    <link rel="icon" href="/images/logo.png" type="image/png" />
+    <link rel="stylesheet" href="/css/squirrel.css" type="text/css" />
+  </head>
+  <body>
+    <table id="header">
+     <tr>
+      <td id="header-left">
+       <img src="/images/logo.png" alt="Logo" />
+       <div id="header-name">Squirrel</div>
+       <div id="header-version">1.0</div>
+      </td>
+      <td id="header-center">
+       <div id="header-rounded-corner"></div>
+      </td>
+      <td id="header-right">
+       <div id="header-spacer"></div>
+      </td>
+     </tr>
+    </table>
+    <table id="app">
+     <tr>
+      <td id="side-panel">
+        <div id="tasks">
+         <div class="task">
+          <router-link to="/projects"><img src="/images/24x24/terminal.png" alt="" />Projects</router-link>
+         </div>
+         <div class="task">
+          <router-link to="/settings"><img src="/images/24x24/setting.png" alt="" />Settings</router-link>
+         </div>
+         <div class="task">
+          <router-link to="/people"><img src="/images/24x24/user.png" alt="" />People</router-link>
+         </div>
+         <div class="task">
+          <router-link to="/builds"><img src="/images/24x24/graph.png" alt="" />Build history</router-link>
+         </div>
+        </div>
+        <div id="builds">
+         <div id="builds-title">Build queue</div>
+         <div class="build">...</div>
+         <div class="build">No builds in the queue.</div>
+        </div>
+      </td>
+      <td id="main-panel">
+        <router-view></router-view>
+      </td>
+     </tr>
+    </table>
+    <table id="footer">
+      <tr>
+        <td id="footer-left"  >Powered by jetty://</td>
+        <td id="footer-center"></td>
+        <td id="footer-right" ></td>
+      </tr>
+    </table>
+    <script src="/js/vue.js"></script>
+    <script src="/js/vue-router.js"></script>
+    <script src="/js/app.js"></script>
+    <script>
+      document.getElementById("footer-right").innerHTML = "Page generated at " + new Date().toString();
+    </script>
+  </body>
+</html>

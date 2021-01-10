@@ -1,50 +1,39 @@
 package ab.squirrel;
 
 import ab.logging.Log;
-
-import ab.squirrel.HttpServer;
-import java.io.IOException;
+import ab.squirrel.Handler;
+//import ab.squirrel.HttpServer;
+//import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.nanohttpd.protocols.http.NanoHTTPD;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+
 
 public class Main {
-    /**
-     * logger to log to.
-     */
-    public static final Logger LOG = Logger.getLogger(Main.class.getName());
+    private static final Logger log = Logger.getLogger(Main.class.getName());
 
-    /**
-     * Starts as a standalone file server and waits for Enter.
-     */
-    public static void main(String[] args) {
-        // Defaults
-        int port = 8080;
-        String host = null; // bind to all interfaces by default
-        String home = "target/webapp";
-        // Initialize logger
-        Log.init(LOG);
-        LOG.info("Home directory is '"+home+"'");
-        LOG.info("Server listening on port "+port);
+    public static void main(String[] args) throws Exception {
+        log.info("Jetty embedded server");
+        Server server = new Server();
+        server.setHandler(new Handler());
 
-        NanoHTTPD server = new HttpServer(host, port, home);
-        try {
-            server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
-        } catch (IOException ioe) {
-            LOG.severe("Couldn't start server: " + ioe);
-            System.exit(-1);
-        }
+        HttpConfiguration httpConfig = new HttpConfiguration();
+        httpConfig.setSendServerVersion( false );
+        HttpConnectionFactory httpFactory = new HttpConnectionFactory( httpConfig );
+        ServerConnector httpConnector = new ServerConnector( server,httpFactory );
+        httpConnector.setPort(8080);
+        server.setConnectors( new Connector[] { httpConnector } );
 
-        LOG.info("Server started, Hit Enter to stop.");
-
-        try {
-            System.in.read();
-        } catch (Throwable ignored) {
-        }
-
-        server.stop();
-        LOG.info("Server stopped.");
+        // Start Server
+        log.info("Start...");
+        server.start();
+        log.info("Join...");
+        server.join();
     }
-
 }
+
