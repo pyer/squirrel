@@ -2,10 +2,6 @@ package ab.squirrel;
 
 import ab.logging.Log;
 import ab.squirrel.Handler;
-//import ab.squirrel.HttpServer;
-//import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -15,9 +11,9 @@ import org.eclipse.jetty.server.ServerConnector;
 
 
 public class Main {
-    private static final Logger log = Logger.getLogger(Main.class.getName());
 
     public static void main(String[] args) throws Exception {
+        Log log = new Log();
         log.info("Jetty embedded server");
         Server server = new Server();
         server.setHandler(new Handler());
