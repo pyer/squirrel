@@ -9,6 +9,7 @@ const header = new Vue({
     version: ''
   },
   created() {
+    console.log("fetch version");
     fetch('/version').then(response => response.json())
                      .then(response => this.version = response.version);
     }
@@ -19,19 +20,14 @@ const header = new Vue({
 // 1. Define route components.
 const Projects = {
   template: '<div>{{list}}</div>',
-  data: function() {
-    list: 'vide'
-//    console.log("fetch projects");
-//    fetch('/projects').then(response => response.json()).then(data => result = data.projects);
-//    fetch('/projects').then(response => response.json())
-//                     .then(response => this.list = "response.projects");
-//    fetch('/projects').then(response => response.json())
-//                         .then(data => projects = data.projects);
-//    console.log(projects);
-    return { list: "projects" }
+  data() {
+    return { projects: '' };
+  },
+  created() {
+    console.log("fetch projects");
+    fetch('/projects').then(response => response.json()).then(res => this.projects = res.projects);
   }
 }
-
 
 const Bar = { template: '<div>bar</div>' }
 
@@ -40,13 +36,7 @@ const Bar = { template: '<div>bar</div>' }
 
 
 
-// 2. Define some routes
-// Each route should map to a component. The "component" can
-// either be an actual component constructor created via
-// Vue.extend(), or just a component options object.
-// We'll talk about nested routes later.
-
-// 3. Create the router instance and pass the `routes` option
+// 2. Create the router instance and pass the `routes` option
 // You can pass in additional options here, but let's
 // keep it simple for now.
 const router = new VueRouter({
@@ -58,7 +48,7 @@ const router = new VueRouter({
   ]
 })
 
-// 4. Create and mount the root instance.
+// 3. Create and mount the root instance.
 // Make sure to inject the router with the router option to make the
 // whole app router-aware.
 const app = new Vue({
