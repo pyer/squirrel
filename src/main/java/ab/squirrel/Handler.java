@@ -79,6 +79,10 @@ public class Handler extends AbstractHandler
           response.setContentType("application/json");
           Projects projects = new Projects(out);
           response.setStatus(projects.list());
+        } else if (uri.startsWith("/settings")) {
+          response.setContentType("application/json");
+          Settings settings = new Settings(out);
+          response.setStatus(settings.list());
         } else if (uri.startsWith("/api/")) {
           response.setContentType("application/json");
           Api api = new Api(uri);
