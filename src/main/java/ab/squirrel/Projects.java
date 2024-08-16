@@ -1,7 +1,5 @@
 package ab.squirrel;
 
-//import ab.logging.Log;
-
 /*
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;

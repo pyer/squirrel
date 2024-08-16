@@ -112,7 +112,7 @@ public class Log
     // ----------------------------------------------------------------------
     private void print( String prefix, CharSequence content )
     {
-        System.out.println( formattedTime() + ":" + prefix + formattedClassName() + content.toString() );
+        System.out.println( formattedTime() + formattedPrefix(prefix) + formattedClassName() + content.toString() );
     }
 
     private void print( String prefix, CharSequence content, Throwable error )
@@ -120,7 +120,7 @@ public class Log
         StringWriter sWriter = new StringWriter();
         PrintWriter pWriter = new PrintWriter( sWriter );
         error.printStackTrace( pWriter );
-        System.out.println( formattedTime() + ":" + prefix + formattedClassName() + content.toString() + "\n\n" + sWriter.toString() );
+        System.out.println( formattedTime() + formattedPrefix(prefix) + formattedClassName() + content.toString() + "\n\n" + sWriter.toString() );
     }
 
     private void print( String prefix, Throwable error )
@@ -128,7 +128,12 @@ public class Log
         StringWriter sWriter = new StringWriter();
         PrintWriter pWriter = new PrintWriter( sWriter );
         error.printStackTrace( pWriter );
-        System.out.println( formattedTime() + ":" + prefix + formattedClassName() + sWriter.toString() );
+        System.out.println( formattedTime() + formattedPrefix(prefix) + formattedClassName() + sWriter.toString() );
+    }
+
+    private String formattedPrefix(String prefix)
+    {
+        return " [ " + prefix + " ] ";
     }
 
     private String formattedTime()
@@ -144,6 +149,6 @@ public class Log
             System.out.print( "--- " + e.getClassName());
         }
 */
-        return ":" + elements[4].getClassName() + ": ";
+        return elements[4].getClassName() + " - ";
     }
 }
