@@ -16,13 +16,10 @@ properties:
   testOutputDirectory: target/test-classes
 
 dependencies:
-  - /org/eclipse/jetty/jetty-http-12.2.0.jar
-  - /org/eclipse/jetty/jetty-io-12.2.0.jar
-  - /org/eclipse/jetty/jetty-server-12.2.0.jar
-  - /org/eclipse/jetty/jetty-slf4j-impl-12.2.0.jar
-  - /org/eclipse/jetty/jetty-util-12.2.0.jar
+  - /ab/eazy/http-12.2.0.jar
+  - /ab/eazy/io-12.2.0.jar
+  - /ab/eazy/server-12.2.0.jar
+  - /ab/eazy/slf4j-impl-12.2.0.jar
+  - /ab/eazy/util-12.2.0.jar
   - /org/slf4j/slf4j-api/2.0.13/slf4j-api-2.0.13.jar
 
-
-#  - /jakarta/servlet/jakarta.servlet-api/6.1.0/jakarta.servlet-api-6.1.0.jar
-#  - /org/eclipse/jetty/jetty-webapp/11.0.22/jetty-webapp-11.0.22.jar

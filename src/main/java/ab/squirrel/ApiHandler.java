@@ -2,6 +2,12 @@ package ab.squirrel;
 
 import ab.squirrel.Api;
 
+import ab.eazy.http.HttpHeader;
+import ab.eazy.server.Request;
+import ab.eazy.server.Response;
+import ab.eazy.util.BufferUtil;
+import ab.eazy.util.Callback;
+
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -9,28 +15,16 @@ import java.io.IOException;
 
 import java.nio.ByteBuffer;
 
-/*
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-*/
-import org.eclipse.jetty.http.HttpHeader;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Response;
-import org.eclipse.jetty.util.BufferUtil;
-import org.eclipse.jetty.util.Callback;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class ApiHandler extends org.eclipse.jetty.server.Handler.Abstract
+public class ApiHandler extends ab.eazy.server.Handler.Abstract
 {
     private static final Logger LOG = LoggerFactory.getLogger(ApiHandler.class);
 
     public ApiHandler()
     {
-        LOG.info("loaded");
     }
 
     @Override
@@ -51,9 +45,7 @@ public class ApiHandler extends org.eclipse.jetty.server.Handler.Abstract
           response.setStatus(200);
         } else {
           // try another handler
-          LOG.info("return FALSE");
           return false;
-//          return super.handle(request, response, callback);
         }
 
         /*
@@ -86,7 +78,6 @@ public class ApiHandler extends org.eclipse.jetty.server.Handler.Abstract
         response.getHeaders().put(HttpHeader.CONTENT_TYPE, contentType);
         response.write(true, ByteBuffer.wrap(content.getBytes()), callback);
         callback.succeeded();
-        LOG.info("return TRUE");
         return true;
     }
 

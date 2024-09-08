@@ -1,14 +1,13 @@
 package ab.squirrel;
 
+import ab.eazy.server.Server;
+import ab.eazy.server.handler.ResourceHandler;
+
 import ab.squirrel.ApiHandler;
-import ab.squirrel.ResourceHandler;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import org.eclipse.jetty.server.Server;
-//import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
