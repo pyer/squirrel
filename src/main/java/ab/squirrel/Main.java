@@ -17,20 +17,12 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         String rootDir = "target/";
-
-        LOG.info("Jetty embedded server");
         Server server = new Server(8080);
         LOG.info("Listen on port 8080");
 
         /* 
          * Handlers
-         * */
-/*
- *     ContextHandlerCollection handlers = new ContextHandlerCollection();
-        handlers.addHandler(new ApiHandler());
-        handlers.addHandler(new ResourceHandler(rootDir, server));
-        server.setHandler(handlers);
-*/
+         */
         server.addHandler(new ApiHandler());
         server.addHandler(new ResourceHandler(rootDir, server));
 
@@ -39,8 +31,6 @@ public class Main {
          */
         LOG.info("Start...");
         server.start();
-        LOG.info("Join...");
-        server.join();
     }
 }
 

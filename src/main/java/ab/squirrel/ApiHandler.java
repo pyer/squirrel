@@ -1,7 +1,5 @@
 package ab.squirrel;
 
-import ab.squirrel.Api;
-
 import ab.eazy.http.HttpHeader;
 import ab.eazy.server.Request;
 import ab.eazy.server.Response;
@@ -31,15 +29,16 @@ public class ApiHandler extends ab.eazy.server.Handler.Abstract
     public boolean handle(Request request, Response response, Callback callback) throws Exception
     {
         String uri = request.getHttpURI().getPath();
-        LOG.info(uri);
 
         String contentType = "text/plain; charset=utf-8";
         String content = "";
 
         if (uri.contains("../")) {
+          LOG.info(uri);
           LOG.error("Error 503 FORBIDDEN: Won't serve ../ for security reasons.");
           response.setStatus(503);
         } else if (uri.equals("/version")) {
+          LOG.info(uri);
           contentType = "application/json";
           content = "{\"version\": \"1.0\"}";
           response.setStatus(200);
@@ -83,3 +82,26 @@ public class ApiHandler extends ab.eazy.server.Handler.Abstract
 
 }
 
+/*
+package ab.squirrel;
+
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+public class Api
+{
+    private String request;
+
+    public Api(String uri) {
+      request = uri.substring(5);
+    }
+
+    public int status(PrintWriter out) {
+      out.print(request);
+      return 200;
+    }
+
+}
+*/
