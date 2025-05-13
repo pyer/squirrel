@@ -1,6 +1,6 @@
 group:   ab
 name:    squirrel
-version: 1.1
+version: 1.2
 packaging: dir
 
 mainClass: ab.squirrel.Main
@@ -16,10 +16,10 @@ properties:
   testOutputDirectory: target/test-classes
 
 dependencies:
-  - /ab/eazy/http-12.2.0.jar
-  - /ab/eazy/io-12.2.0.jar
-  - /ab/eazy/logging-12.2.0.jar
-  - /ab/eazy/server-12.2.0.jar
-  - /ab/eazy/util-12.2.0.jar
+  - /ab/squirrel/http-2.0.jar
+  - /ab/squirrel/io-2.0.jar
+  - /ab/squirrel/logger-2.0.jar
+  - /ab/squirrel/server-2.0.jar
+  - /ab/squirrel/util-2.0.jar
   - /org/slf4j/slf4j-api/2.0.13/slf4j-api-2.0.13.jar
 

@@ -1,10 +1,10 @@
 package ab.squirrel;
 
-import ab.eazy.http.HttpHeader;
-import ab.eazy.server.Request;
-import ab.eazy.server.Response;
-import ab.eazy.util.BufferUtil;
-import ab.eazy.util.Callback;
+import ab.squirrel.http.HttpHeader;
+import ab.squirrel.server.Request;
+import ab.squirrel.server.Response;
+import ab.squirrel.util.BufferUtil;
+import ab.squirrel.util.Callback;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class ApiHandler extends ab.eazy.server.Handler.Abstract
+public class ApiHandler extends ab.squirrel.server.Handler.Abstract
 {
     private static final Logger LOG = LoggerFactory.getLogger(ApiHandler.class);
 

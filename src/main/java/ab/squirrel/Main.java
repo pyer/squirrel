@@ -1,7 +1,7 @@
 package ab.squirrel;
 
-import ab.eazy.server.Server;
-import ab.eazy.server.handler.ResourceHandler;
+import ab.squirrel.server.Server;
+import ab.squirrel.server.handler.ResourceHandler;
 
 import ab.squirrel.ApiHandler;
 
