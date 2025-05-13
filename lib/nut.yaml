@@ -1,0 +1,10 @@
+group:   ab.squirrel
+name:    lib
+version: 2.0
+
+modules:
+  - http
+  - io
+  - logger
+  - server
+  - util

@@ -1,0 +1,8 @@
+group:   ab.squirrel
+name:    util
+version: 2.0
+pattern: jar2
+
+dependencies:
+  - /org/slf4j/slf4j-api/2.0.13/slf4j-api-2.0.13.jar
+

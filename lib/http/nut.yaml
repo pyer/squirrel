@@ -1,0 +1,15 @@
+group:   ab.squirrel
+name:    http
+version: 2.0
+pattern: jar2
+
+dependencies:
+  - /ab/squirrel/io-2.0.jar
+  - /ab/squirrel/logger-2.0.jar
+  - /ab/squirrel/util-2.0.jar
+  - /org/slf4j/slf4j-api/2.0.13/slf4j-api-2.0.13.jar
+
+
+#testDependencies:
+#  - /org/eclipse/jetty/tests/jetty-test-multipart/2.0/jetty-test-multipart-2.0.jar
+
