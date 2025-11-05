@@ -100,11 +100,6 @@ public interface HttpStream extends Callback
 
     boolean isCommitted();
 
-    default TunnelSupport getTunnelSupport()
-    {
-        return null;
-    }
-
     Throwable consumeAvailable();
 
     static Throwable consumeAvailable(HttpStream stream, HttpConfiguration httpConfig)
@@ -201,12 +196,6 @@ public interface HttpStream extends Callback
         public final boolean isCommitted()
         {
             return getWrapped().isCommitted();
-        }
-
-        @Override
-        public TunnelSupport getTunnelSupport()
-        {
-            return getWrapped().getTunnelSupport();
         }
 
         @Override

@@ -57,7 +57,6 @@ import ab.squirrel.server.RequestLog;
 import ab.squirrel.server.Response;
 import ab.squirrel.server.Server;
 import ab.squirrel.server.Session;
-import ab.squirrel.server.TunnelSupport;
 import ab.squirrel.util.Attributes;
 import ab.squirrel.util.BufferUtil;
 import ab.squirrel.util.Callback;
@@ -1054,12 +1053,6 @@ public class HttpChannelState implements HttpChannel, Components
                     };
                 }
             }
-        }
-
-        @Override
-        public TunnelSupport getTunnelSupport()
-        {
-            return getHttpStream().getTunnelSupport();
         }
 
         @Override

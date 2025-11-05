@@ -61,7 +61,6 @@ import ab.squirrel.server.HttpConfiguration;
 import ab.squirrel.server.HttpStream;
 import ab.squirrel.server.Request;
 import ab.squirrel.server.Server;
-import ab.squirrel.server.TunnelSupport;
 import ab.squirrel.util.BufferUtil;
 import ab.squirrel.util.Callback;
 import ab.squirrel.util.HostPort;
@@ -86,7 +85,6 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
     private static final ThreadLocal<HttpConnection> __currentConnection = new ThreadLocal<>();
     private static final AtomicLong __connectionIdGenerator = new AtomicLong();
 
-    private final TunnelSupport _tunnelSupport = new TunnelSupportOverHTTP1();
     private final AtomicLong _streamIdGenerator = new AtomicLong();
     private final long _id;
     private final HttpChannel _httpChannel;
@@ -1455,12 +1453,6 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
         }
 
         @Override
-        public TunnelSupport getTunnelSupport()
-        {
-            return _tunnelSupport;
-        }
-
-        @Override
         public void succeeded()
         {
             HttpStreamOverHTTP1 stream = _stream.getAndSet(null);
@@ -1580,21 +1572,6 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
         public InvocationType getInvocationType()
         {
             return HttpStream.super.getInvocationType();
-        }
-    }
-
-    private class TunnelSupportOverHTTP1 implements TunnelSupport
-    {
-        @Override
-        public String getProtocol()
-        {
-            return null;
-        }
-
-        @Override
-        public EndPoint getEndPoint()
-        {
-            return HttpConnection.this.getEndPoint();
         }
     }
 

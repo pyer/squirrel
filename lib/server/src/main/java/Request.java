@@ -317,8 +317,6 @@ public interface Request extends Attributes, Content.Source
      */
     void addFailureListener(Consumer<Throwable> onFailure);
 
-    TunnelSupport getTunnelSupport();
-
     /**
      * Add a {@link HttpStream.Wrapper} to the current {@link HttpStream}.
      * @param wrapper A function that wraps the passed stream.
@@ -840,12 +838,6 @@ public interface Request extends Attributes, Content.Source
         public void addFailureListener(Consumer<Throwable> onFailure)
         {
             getWrapped().addFailureListener(onFailure);
-        }
-
-        @Override
-        public TunnelSupport getTunnelSupport()
-        {
-            return getWrapped().getTunnelSupport();
         }
 
         @Override
