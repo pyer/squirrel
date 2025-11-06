@@ -149,15 +149,11 @@ public class ServerConnector extends AbstractNetworkConnector
         @Name("factories") ConnectionFactory... factories)
     {
         super(server, executor, scheduler, bufferPool, acceptors, factories);
-        _manager = newSelectorManager(getExecutor(), getScheduler(), selectors);
+        _manager = new ServerConnectorManager(getExecutor(), getScheduler(), selectors);
         installBean(_manager, true);
         setAcceptorPriorityDelta(-2);
     }
 
-    protected SelectorManager newSelectorManager(Executor executor, Scheduler scheduler, int selectors)
-    {
-        return new ServerConnectorManager(executor, scheduler, selectors);
-    }
 
     @Override
     protected void doStart() throws Exception
