@@ -11,14 +11,14 @@
 // ========================================================================
 //
 
-package ab.squirrel.http.content;
+package ab.squirrel.http;
 
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Set;
 
-import ab.squirrel.http.CompressedContentFormat;
+//import ab.squirrel.http.CompressedContentFormat;
 import ab.squirrel.http.DateGenerator;
 import ab.squirrel.http.EtagUtils;
 import ab.squirrel.http.HttpField;
@@ -33,14 +33,15 @@ import ab.squirrel.util.resource.Resource;
  * cached. So fields and values are only generated as need be an not
  * kept for reuse</p>
  */
-public class ResourceHttpContent implements HttpContent
+//public class ResourceHttpContent implements HttpContent
+public class HttpContent
 {
     final Resource _resource;
     final Path _path;
     final String _contentType;
     final HttpField _etag;
 
-    public ResourceHttpContent(final Resource resource, final String contentType)
+    public HttpContent(final Resource resource, final String contentType)
     {
         _resource = resource;
         _path = resource.getPath();
@@ -48,69 +49,58 @@ public class ResourceHttpContent implements HttpContent
         _etag = EtagUtils.createWeakEtagField(resource);
     }
 
-    @Override
     public String getContentTypeValue()
     {
         return _contentType;
     }
 
-    @Override
     public HttpField getContentType()
     {
         return _contentType == null ? null : new HttpField(HttpHeader.CONTENT_TYPE, _contentType);
     }
 
-    @Override
     public HttpField getContentEncoding()
     {
         return null;
     }
 
-    @Override
     public String getContentEncodingValue()
     {
         return null;
     }
 
-    @Override
     public String getCharacterEncoding()
     {
         return _contentType == null ? null : MimeTypes.getCharsetFromContentType(_contentType);
     }
 
-    @Override
     public Type getMimeType()
     {
         return _contentType == null ? null : MimeTypes.CACHE.get(MimeTypes.getContentTypeWithoutCharset(_contentType));
     }
 
-    @Override
     public Instant getLastModifiedInstant()
     {
         return _resource.lastModified();
     }
 
-    @Override
     public HttpField getLastModified()
     {
         Instant lm = _resource.lastModified();
         return new HttpField(HttpHeader.LAST_MODIFIED, DateGenerator.formatDate(lm));
     }
 
-    @Override
     public String getLastModifiedValue()
     {
         Instant lm = _resource.lastModified();
         return DateGenerator.formatDate(lm);
     }
 
-    @Override
     public HttpField getETag()
     {
         return _etag;
     }
 
-    @Override
     public String getETagValue()
     {
         if (_etag == null)
@@ -118,44 +108,32 @@ public class ResourceHttpContent implements HttpContent
         return _etag.getValue();
     }
 
-    @Override
     public HttpField getContentLength()
     {
         long l = getContentLengthValue();
         return l == -1 ? null : new HttpField.LongValueHttpField(HttpHeader.CONTENT_LENGTH, l);
     }
 
-    @Override
     public long getContentLengthValue()
     {
         return _resource.length();
     }
 
-    @Override
     public Resource getResource()
     {
         return _resource;
     }
 
-    @Override
     public String toString()
     {
         return String.format("%s@%x{r=%s,ct=%s}", this.getClass().getSimpleName(), hashCode(), _resource, _contentType);
     }
 
-    @Override
     public ByteBuffer getByteBuffer()
     {
         return null;
     }
 
-    @Override
-    public Set<CompressedContentFormat> getPreCompressedContentFormats()
-    {
-        return null;
-    }
-
-    @Override
     public void release()
     {
     }

@@ -11,12 +11,13 @@
 // ========================================================================
 //
 
-package ab.squirrel.http.content;
+package ab.squirrel.http;
 
 import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.util.Objects;
 
+import ab.squirrel.http.HttpContent;
 import ab.squirrel.http.MimeTypes;
 import ab.squirrel.util.resource.Resource;
 import ab.squirrel.util.resource.ResourceFactory;
@@ -27,7 +28,8 @@ import ab.squirrel.util.resource.Resources;
  * this factory are not intended to be cached, so memory limits for individual
  * HttpOutput streams are enforced.
  */
-public class ResourceHttpContentFactory implements HttpContent.Factory
+//public class ResourceHttpContentFactory implements HttpContent.Factory
+public class ResourceHttpContentFactory
 {
     private final Resource _baseResource;
     private final MimeTypes _mimeTypes;
@@ -39,7 +41,6 @@ public class ResourceHttpContentFactory implements HttpContent.Factory
         _mimeTypes = mimeTypes;
     }
 
-    @Override
     public HttpContent getContent(String pathInContext) throws IOException
     {
         try
@@ -73,10 +74,9 @@ public class ResourceHttpContentFactory implements HttpContent.Factory
     {
         if (resource == null || !resource.exists())
             return null;
-        return new ResourceHttpContent(resource, _mimeTypes.getMimeByExtension(pathInContext));
+        return new HttpContent(resource, _mimeTypes.getMimeByExtension(pathInContext));
     }
 
-    @Override
     public String toString()
     {
         return "ResourceContentFactory[" + _baseResource + "]@" + hashCode();

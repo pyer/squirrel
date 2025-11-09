@@ -377,6 +377,7 @@ public class Server extends Handler.Abstract implements Attributes
 
         if (getStopTimeout() > 0)
         {
+        LOG.info(String.format("Timeout server %d", getStopTimeout()));
             long end = NanoTime.now() + TimeUnit.MILLISECONDS.toNanos(getStopTimeout());
             try
             {

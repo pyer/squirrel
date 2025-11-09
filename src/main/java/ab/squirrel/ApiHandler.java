@@ -1,6 +1,7 @@
 package ab.squirrel;
 
 import ab.squirrel.http.HttpHeader;
+import ab.squirrel.http.HttpMethod;
 import ab.squirrel.server.Request;
 import ab.squirrel.server.Response;
 import ab.squirrel.util.BufferUtil;
@@ -32,6 +33,12 @@ public class ApiHandler extends ab.squirrel.server.Handler.Abstract
 
         String contentType = "text/plain; charset=utf-8";
         String content = "";
+
+        //if (!HttpMethod.GET.is(request.getMethod()) && !HttpMethod.HEAD.is(request.getMethod())) {
+        if (!HttpMethod.GET.is(request.getMethod())) {
+            // try another handler
+            return false;
+        }
 
         if (uri.contains("../")) {
           LOG.info(uri);

@@ -1,24 +1,25 @@
-package ab.squirrel.server.handler;
+package ab.squirrel;
 
 import java.net.URI;
 import java.net.URL;
 
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 
-import ab.squirrel.http.CompressedContentFormat;
+import ab.squirrel.http.HttpContent;
+//import ab.squirrel.http.CompressedContentFormat;
 import ab.squirrel.http.HttpMethod;
 import ab.squirrel.http.HttpURI;
 import ab.squirrel.http.MimeTypes;
-import ab.squirrel.http.content.FileMappingHttpContentFactory;
-import ab.squirrel.http.content.HttpContent;
-import ab.squirrel.http.content.PreCompressedHttpContentFactory;
-import ab.squirrel.http.content.ResourceHttpContentFactory;
-import ab.squirrel.http.content.ValidatingCachingHttpContentFactory;
-import ab.squirrel.http.content.VirtualHttpContentFactory;
+//import ab.squirrel.http.content.FileMappingHttpContentFactory;
+//import ab.squirrel.http.content.PreCompressedHttpContentFactory;
+import ab.squirrel.http.ResourceHttpContentFactory;
+//import ab.squirrel.http.content.ValidatingCachingHttpContentFactory;
+//import ab.squirrel.http.content.VirtualHttpContentFactory;
 import ab.squirrel.io.ArrayByteBufferPool;
 import ab.squirrel.io.ByteBufferPool;
 import ab.squirrel.server.Context;
@@ -60,7 +61,8 @@ public class ResourceHandler extends ab.squirrel.server.Handler.Abstract
         _resourceService = new ResourceService(rootDir);
         Path rootPath = Paths.get(rootDir).toAbsolutePath().normalize();
         if (Files.isDirectory(rootPath)) {
-            _resourceService.setHttpContentFactory(newHttpContentFactory());
+            ResourceHttpContentFactory contentFactory = new ResourceHttpContentFactory(_baseResource, getMimeTypes());
+            _resourceService.setHttpContentFactory(contentFactory);
             ResourceFactory resourceFactory = ResourceFactory.of(server);
             _baseResource = resourceFactory.newResource(rootPath);
             LOG.info("Root directory is " + rootDir);
@@ -69,45 +71,24 @@ public class ResourceHandler extends ab.squirrel.server.Handler.Abstract
         }
     }
 
-    private HttpContent.Factory newHttpContentFactory()
-    {
-        HttpContent.Factory contentFactory = new ResourceHttpContentFactory(getBaseResource(), getMimeTypes());
-        if (isUseFileMapping())
-            contentFactory = new FileMappingHttpContentFactory(contentFactory);
-//        contentFactory = new VirtualHttpContentFactory(contentFactory, getStyleSheet(), "text/css");
-        contentFactory = new PreCompressedHttpContentFactory(contentFactory, getPrecompressedFormats());
-        contentFactory = new ValidatingCachingHttpContentFactory(contentFactory, Duration.ofSeconds(1).toMillis(), getByteBufferPool());
-        return contentFactory;
-    }
-
     @Override
     public boolean handle(Request request, Response response, Callback callback) throws Exception
     {
         String uri = request.getHttpURI().getPath();
         LOG.info(uri);
 
-        if (!HttpMethod.GET.is(request.getMethod()) && !HttpMethod.HEAD.is(request.getMethod()))
-        {
+        if (!HttpMethod.GET.is(request.getMethod()) && !HttpMethod.HEAD.is(request.getMethod())) {
             // try another handler
             return false;
         }
 
         HttpContent content = _resourceService.getContent(Request.getPathInContext(request), request);
-        if (content == null)
-        {
+        if (content == null) {
             return false;
         }
 
         _resourceService.doGet(request, response, callback, content);
         return true;
-    }
-
-       /**
-     * @return Returns the resourceBase.
-     */
-    public Resource getBaseResource()
-    {
-        return _baseResource;
     }
 
     public ByteBufferPool getByteBufferPool()
@@ -161,35 +142,4 @@ public class ResourceHandler extends ab.squirrel.server.Handler.Abstract
         return _resourceService.isEtags();
     }
 
-    public boolean isUseFileMapping()
-    {
-        return _useFileMapping;
-    }
-
-    /**
-     * @return Precompressed resources formats that can be used to serve compressed variant of resources.
-     */
-    public List<CompressedContentFormat> getPrecompressedFormats()
-    {
-        return _resourceService.getPrecompressedFormats();
-    }
-
-
-    /**
-     * Create a new Resource representing a resources that is managed by the Server.
-     *
-     * @param name the name of the resource (relative to `/ab.squirrel/server/`)
-     * @return the Resource found, or null if not found.
-     */
-    private Resource newResource(String name)
-    {
-        URL url = getClass().getResource(name);
-        if (url == null)
-            throw new IllegalStateException("Missing server resource: " + name);
-        return ResourceFactory.root().newMemoryResource(url);
-    }
-
-
-
 }
-

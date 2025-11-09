@@ -31,8 +31,8 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import ab.squirrel.http.ByteRange;
-import ab.squirrel.http.CompressedContentFormat;
 import ab.squirrel.http.EtagUtils;
+import ab.squirrel.http.HttpContent;
 import ab.squirrel.http.HttpDateTime;
 import ab.squirrel.http.HttpField;
 import ab.squirrel.http.HttpFields;
@@ -45,15 +45,7 @@ import ab.squirrel.http.PreEncodedHttpField;
 import ab.squirrel.http.QuotedCSV;
 import ab.squirrel.http.QuotedQualityCSV;
 
-import ab.squirrel.http.content.HttpContent;
-import ab.squirrel.http.content.PreCompressedHttpContent;
-/*
-import ab.squirrel.http.content.FileMappingHttpContentFactory;
-import ab.squirrel.http.content.PreCompressedHttpContentFactory;
-import ab.squirrel.http.content.ResourceHttpContentFactory;
-import ab.squirrel.http.content.ValidatingCachingHttpContentFactory;
-import ab.squirrel.http.content.VirtualHttpContentFactory;
-*/
+import ab.squirrel.http.ResourceHttpContentFactory;
 
 import ab.squirrel.io.Content;
 import ab.squirrel.io.IOResources;
@@ -77,7 +69,6 @@ public class ResourceService
     private static final int NO_CONTENT_LENGTH = -1;
     private static final int USE_KNOWN_CONTENT_LENGTH = -2;
 
-    private final List<CompressedContentFormat> _precompressedFormats = new ArrayList<>();
     private final Map<String, List<String>> _preferredEncodingOrderCache = new ConcurrentHashMap<>();
     private final List<String> _preferredEncodingOrder = new ArrayList<>();
 
@@ -86,7 +77,8 @@ public class ResourceService
     private int _encodingCacheSize = 100;
     private boolean _dirAllowed = true;
     private boolean _acceptRanges = true;
-    private HttpContent.Factory _contentFactory;
+    //private HttpContent.Factory _contentFactory;
+    private ResourceHttpContentFactory _contentFactory;
     private HttpField _cacheControl;
     private List<String> _gzipEquivalentFileExtensions;
 
@@ -111,41 +103,17 @@ public class ResourceService
             if (aliasCheck != null && !aliasCheck.checkAlias(path, content.getResource()))
                 return null;
 
-            Collection<CompressedContentFormat> compressedContentFormats = (content.getPreCompressedContentFormats() == null)
-                ? _precompressedFormats : content.getPreCompressedContentFormats();
-            if (!compressedContentFormats.isEmpty())
-            {
-                List<String> preferredEncodingOrder = getPreferredEncodingOrder(request);
-                if (!preferredEncodingOrder.isEmpty())
-                {
-                    for (String encoding : preferredEncodingOrder)
-                    {
-                        CompressedContentFormat contentFormat = isEncodingAvailable(encoding, compressedContentFormats);
-                        if (contentFormat == null)
-                            continue;
-
-                        HttpContent preCompressedContent = _contentFactory.getContent(path + contentFormat.getExtension());
-                        if (preCompressedContent == null)
-                            continue;
-
-                        if (aliasCheck != null && !aliasCheck.checkAlias(path, preCompressedContent.getResource()))
-                            continue;
-
-                        return new PreCompressedHttpContent(content, preCompressedContent, contentFormat);
-                    }
-                }
-            }
         }
 
         return content;
     }
 
-    public HttpContent.Factory getHttpContentFactory()
+    public ResourceHttpContentFactory getHttpContentFactory()
     {
         return _contentFactory;
     }
 
-    public void setHttpContentFactory(HttpContent.Factory contentFactory)
+    public void setHttpContentFactory( ResourceHttpContentFactory contentFactory)
     {
         _contentFactory = contentFactory;
     }
@@ -199,14 +167,11 @@ public class ResourceService
             if (passConditionalHeaders(request, response, content, callback))
                 return;
 
-            if (content.getPreCompressedContentFormats() == null || !content.getPreCompressedContentFormats().isEmpty())
-                response.getHeaders().put(HttpHeader.VARY, HttpHeader.ACCEPT_ENCODING.asString());
-
             HttpField contentEncoding = content.getContentEncoding();
             if (contentEncoding != null)
                 response.getHeaders().put(contentEncoding);
-            else if (isImplicitlyGzippedContent(pathInContext))
-                response.getHeaders().put(HttpHeader.CONTENT_ENCODING, "gzip");
+//            else if (isImplicitlyGzippedContent(pathInContext))
+//                response.getHeaders().put(HttpHeader.CONTENT_ENCODING, "gzip");
 
             // Send the data
             sendData(request, response, callback, content, reqRanges);
@@ -269,35 +234,6 @@ public class ResourceService
         }
 
         return values;
-    }
-
-    private boolean isImplicitlyGzippedContent(String path)
-    {
-        if (path == null || _gzipEquivalentFileExtensions == null)
-            return false;
-
-        for (String suffix : _gzipEquivalentFileExtensions)
-        {
-            if (path.endsWith(suffix))
-                return true;
-        }
-        return false;
-    }
-
-    private CompressedContentFormat isEncodingAvailable(String encoding, Collection<CompressedContentFormat> availableFormats)
-    {
-        if (availableFormats.isEmpty())
-            return null;
-
-        for (CompressedContentFormat format : availableFormats)
-        {
-            if (format.getEncoding().equals(encoding))
-                return format;
-        }
-
-        if ("*".equals(encoding))
-            return availableFormats.iterator().next();
-        return null;
     }
 
     /**
@@ -627,14 +563,6 @@ public class ResourceService
         return _etags;
     }
 
-    /**
-     * @return Precompressed resources formats that can be used to serve compressed variant of resources.
-     */
-    public List<CompressedContentFormat> getPrecompressedFormats()
-    {
-        return _precompressedFormats;
-    }
-
 /*
     public WelcomeMode getWelcomeMode()
     {
@@ -686,19 +614,6 @@ public class ResourceService
     public void setGzipEquivalentFileExtensions(List<String> gzipEquivalentFileExtensions)
     {
         _gzipEquivalentFileExtensions = gzipEquivalentFileExtensions;
-    }
-
-    /**
-     * @param precompressedFormats The list of precompresed formats to serve in encoded format if matching resource found.
-     * For example serve gzip encoded file if ".gz" suffixed resource is found.
-     */
-    public void setPrecompressedFormats(List<CompressedContentFormat> precompressedFormats)
-    {
-        _precompressedFormats.clear();
-        _precompressedFormats.addAll(precompressedFormats);
-        // TODO: this preferred encoding order should be a separate configurable
-        _preferredEncodingOrder.clear();
-        _preferredEncodingOrder.addAll(_precompressedFormats.stream().map(CompressedContentFormat::getEncoding).toList());
     }
 
     public void setEncodingCacheSize(int encodingCacheSize)

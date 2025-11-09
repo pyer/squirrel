@@ -251,6 +251,7 @@ public class QueuedThreadPool extends ContainerLifeCycle implements ThreadFactor
         BlockingQueue<Runnable> jobs = getQueue();
         if (timeout > 0)
         {
+          LOG.info(String.format("Timeout %d", getStopTimeout()));
             // Fill the job queue with noop jobs to wakeup idle threads.
             for (int i = 0; i < threads; ++i)
                 if (!jobs.offer(NOOP))

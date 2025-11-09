@@ -1,9 +1,8 @@
 package ab.squirrel;
 
 import ab.squirrel.server.Server;
-import ab.squirrel.server.handler.ResourceHandler;
-
 import ab.squirrel.ApiHandler;
+import ab.squirrel.ResourceHandler;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
