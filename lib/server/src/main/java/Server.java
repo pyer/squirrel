@@ -281,13 +281,6 @@ public class Server extends Handler.Abstract implements Attributes
             //with the shutdown handler thread.
             ShutdownThread.register(this);
 
-            //Register the Server with the handler thread for receiving
-            //remote stop commands
-            ShutdownMonitor.register(this);
-
-            //Start a thread waiting to receive "stop" commands.
-            ShutdownMonitor.getInstance().start(); // initialize
-
             final ExceptionUtil.MultiException multiException = new ExceptionUtil.MultiException();
 
             // Open network connector to ensure ports are available
@@ -402,10 +395,6 @@ public class Server extends Handler.Abstract implements Attributes
         }
 
         ShutdownThread.deregister(this);
-        //Unregister the Server with the handler thread for receiving
-        //remote stop commands as we are stopped already
-        ShutdownMonitor.deregister(this);
-
         ExceptionUtil.ifExceptionThrow(multiException);
     }
 
