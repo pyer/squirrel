@@ -51,7 +51,6 @@ import ab.squirrel.util.component.Graceful;
 import ab.squirrel.util.component.LifeCycle;
 import ab.squirrel.util.resource.FileSystemPool;
 import ab.squirrel.util.resource.Resource;
-import ab.squirrel.util.resource.ResourceFactory;
 import ab.squirrel.util.thread.AutoLock;
 import ab.squirrel.util.thread.QueuedThreadPool;
 import ab.squirrel.util.thread.ScheduledExecutorScheduler;
@@ -470,20 +469,6 @@ public class Server extends Handler.Abstract implements Attributes
     public Server getServer()
     {
         return this;
-    }
-
-    /**
-     * Create a new Resource representing a resources that is managed by the Server.
-     *
-     * @param name the name of the resource (relative to `/ab.squirrel/server/`)
-     * @return the Resource found, or null if not found.
-     */
-    private Resource newResource(String name)
-    {
-        URL url = getClass().getResource(name);
-        if (url == null)
-            throw new IllegalStateException("Missing server resource: " + name);
-        return ResourceFactory.root().newMemoryResource(url);
     }
 
     @Override

@@ -33,7 +33,6 @@ import java.util.StringTokenizer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import ab.squirrel.util.resource.ResourceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1476,25 +1475,6 @@ public final class URIUtil
     }
 
     /**
-     * Append scheme, host and port URI prefix, handling IPv6 address encoding and default ports
-     *
-     * @param url StringBuffer to append to
-     * @param scheme the URI scheme
-     * @param server the URI server
-     * @param port the URI port
-     * @deprecated Use {@link #appendSchemeHostPort(StringBuilder, String, String, int)}
-     */
-    @Deprecated
-    public static void appendSchemeHostPort(StringBuffer url, String scheme, String server, int port)
-    {
-        scheme = normalizeScheme(scheme);
-        url.append(scheme).append("://").append(HostPort.normalizeHost(server));
-        port = normalizePortForScheme(scheme, port);
-        if (port > 0)
-            url.append(':').append(port);
-    }
-
-    /**
      * Encode characters in a path to ensure they only contain safe encodings suitable for both
      * {@link URI} and {@link Paths#get(URI)} usage.
      *
@@ -1713,34 +1693,6 @@ public final class URIUtil
      * </p>
      *
      * <p>
-     *     This correction is limited to only the {@code file:/} substring in the URI.
-     *     If there is a {@code file:/<not-a-slash>} detected, that substring is corrected to
-     *     {@code file:///<not-a-slash>}, all other uses of {@code file:}, and URIs without a {@code file:}
-     *     substring are left alone.
-     * </p>
-     *
-     * <p>
-     *     Note that Windows UNC based URIs are left alone, along with non-absolute URIs.
-     * </p>
-     *
-     * @param uri the URI to (possibly) correct
-     * @return the new URI with the {@code file:/} substring corrected, or the original URI.
-     * @deprecated use {@link #correctURI(URI)} instead, will be removed in Jetty 12.1.0
-     */
-    @Deprecated(since = "12.0.7", forRemoval = true)
-    public static URI correctFileURI(URI uri)
-    {
-        return correctURI(uri);
-    }
-
-    /**
-     * <p>
-     * Corrects any bad {@code file} based URIs (even within a {@code jar:file:} based URIs) from the bad out-of-spec
-     * format that various older Java APIs creates (most notably: {@link java.io.File} creates with it's {@link File#toURL()}
-     * and {@link File#toURI()}, along with the side effects of using {@link URL#toURI()})
-     * </p>
-     *
-     * <p>
      *     This correction is currently limited to only the {@code file:/} substring in the URI.
      *     If there is a {@code file:/<not-a-slash>} detected, that substring is corrected to
      *     {@code file:///<not-a-slash>}, all other uses of {@code file:}, and URIs without a {@code file:}
@@ -1779,70 +1731,6 @@ public final class URIUtil
         if (end >= 0)
             return URI.create(rawURI.substring(0, colon) + ":///" + rawURI.substring(end));
         return uri;
-    }
-
-    /**
-     * Split a string of references, that may be split with '{@code ,}', or '{@code ;}', or '{@code |}' into URIs.
-     * <p>
-     *     Each part of the input string could be path references (unix or windows style), or string URI references.
-     * </p>
-     * <p>
-     *     If the result of processing the input segment is a java archive, then its resulting URI will be a mountable URI as {@code jar:file:...!/}
-     * </p>
-     *
-     * @param str the input string of references
-     * @see #toJarFileUri(URI)
-     * @deprecated use {@link ResourceFactory#split(String)}
-     */
-    @Deprecated(since = "12.0.8", forRemoval = true)
-    public static List<URI> split(String str)
-    {
-        List<URI> uris = new ArrayList<>();
-
-        StringTokenizer tokenizer = new StringTokenizer(str, ",;|");
-        while (tokenizer.hasMoreTokens())
-        {
-            String reference = tokenizer.nextToken();
-            try
-            {
-                // Is this a glob reference?
-                if (reference.endsWith("/*") || reference.endsWith("\\*"))
-                {
-                    String dir = reference.substring(0, reference.length() - 2);
-                    Path pathDir = Paths.get(dir);
-                    // Use directory
-                    if (Files.exists(pathDir) && Files.isDirectory(pathDir))
-                    {
-                        // To obtain the list of entries
-                        try (Stream<Path> listStream = Files.list(pathDir))
-                        {
-                            listStream
-                                .filter(Files::isRegularFile)
-                                .filter(FileID::isLibArchive)
-                                .sorted(Comparator.naturalOrder())
-                                .forEach(path -> uris.add(toJarFileUri(path.toUri())));
-                        }
-                        catch (IOException e)
-                        {
-                            throw new RuntimeException("Unable to process directory glob listing: " + reference, e);
-                        }
-                    }
-                }
-                else
-                {
-                    // Simple reference
-                    URI refUri = toURI(reference);
-                    // Ensure that a Java Archive that can be mounted
-                    uris.add(toJarFileUri(refUri));
-                }
-            }
-            catch (Exception e)
-            {
-                LOG.warn("Invalid Resource Reference: " + reference);
-                throw e;
-            }
-        }
-        return uris;
     }
 
     /**
@@ -1889,76 +1777,6 @@ public final class URIUtil
 
         // shouldn't be possible to reach this point
         throw new IllegalArgumentException("Cannot make %s into `jar:file:` URI".formatted(uri));
-    }
-
-    /**
-     * <p>Convert a String into a URI suitable for use as a Resource.</p>
-     *
-     * @param resource If the string starts with one of the ALLOWED_SCHEMES, then it is assumed to be a
-     * representation of a {@link URI}, otherwise it is treated as a {@link Path}.
-     * @return The {@link URI} form of the resource.
-     * @deprecated This method is currently resolving relative paths against the current directory, which is a mechanism
-     * that should be implemented by a {@link ResourceFactory}.   All calls to this method need to be reviewed.
-     */
-    @Deprecated(since = "12.0.8")
-    public static URI toURI(String resource)
-    {
-        Objects.requireNonNull(resource);
-
-        if (URIUtil.hasScheme(resource))
-        {
-            try
-            {
-                URI uri = new URI(resource);
-
-                if (ResourceFactory.isSupported(uri))
-                    return correctURI(uri);
-
-                // We don't have a supported URI scheme
-                if (uri.getScheme().length() == 1)
-                {
-                    // Input is a possible Windows path disguised as a URI "D:/path/to/resource.txt".
-                    try
-                    {
-                        return toURI(Paths.get(resource).toUri().toASCIIString());
-                    }
-                    catch (InvalidPathException x)
-                    {
-                        LOG.trace("ignored", x);
-                    }
-                }
-
-                // If we reached this point, that means the input String has a scheme,
-                // and is not recognized as supported by the registered schemes in ResourceFactory.
-                if (LOG.isDebugEnabled())
-                    LOG.debug("URI scheme is not registered: {}", uri.toASCIIString());
-                throw new IllegalArgumentException("URI scheme not registered: " + uri.getScheme());
-            }
-            catch (URISyntaxException x)
-            {
-                // We have an input string that has what looks like a scheme, but isn't a URI.
-                // Eg: "C:\path\to\resource.txt"
-                LOG.trace("ignored", x);
-            }
-        }
-
-        // If we reached this point, we have a String with no valid scheme.
-        // Treat it as a Path, as that's all we have left to investigate.
-        try
-        {
-            return toURI(Paths.get(resource).toUri().toASCIIString());
-        }
-        catch (InvalidPathException x)
-        {
-            LOG.trace("ignored", x);
-        }
-
-        // If we reached this here, that means the input string cannot be used as
-        // a URI or a File Path.  The cause is usually due to bad input (eg:
-        // characters that are not supported by file system)
-        if (LOG.isDebugEnabled())
-            LOG.debug("Input string cannot be converted to URI \"{}\"", resource);
-        throw new IllegalArgumentException("Cannot be converted to URI");
     }
 
     /**
