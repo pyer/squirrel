@@ -53,7 +53,6 @@ import ab.squirrel.server.HttpChannel;
 import ab.squirrel.server.HttpConfiguration;
 import ab.squirrel.server.HttpStream;
 import ab.squirrel.server.Request;
-import ab.squirrel.server.RequestLog;
 import ab.squirrel.server.Response;
 import ab.squirrel.server.Server;
 import ab.squirrel.server.Session;
@@ -715,15 +714,6 @@ public class HttpChannelState implements HttpChannel, Components
         {
             try
             {
-                RequestLog requestLog = getServer().getRequestLog();
-                if (requestLog != null)
-                {
-                    if (LOG.isDebugEnabled())
-                        LOG.debug("logging {}", HttpChannelState.this);
-
-                    requestLog.log(_request.getLoggedRequest(), _response);
-                }
-
                 // Clean up any multipart tmp files and release any associated resources.
                 Parts parts = (Parts)_request.getAttribute(Parts.class.getName());
                 if (parts != null)

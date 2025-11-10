@@ -43,7 +43,6 @@ import ab.squirrel.util.DecoratedObjectFactory;
 import ab.squirrel.util.ExceptionUtil;
 import ab.squirrel.util.IO;
 import ab.squirrel.util.NanoTime;
-import ab.squirrel.util.Uptime;
 import ab.squirrel.util.annotation.ManagedAttribute;
 import ab.squirrel.util.annotation.ManagedObject;
 import ab.squirrel.util.annotation.Name;
@@ -78,7 +77,6 @@ public class Server extends Handler.Abstract implements Attributes
     private final Context _serverContext = new ServerContext();
     private final AutoLock _dateLock = new AutoLock();
     private Request.Handler _errorHandler = new ErrorHandler();
-    private RequestLog _requestLog;
     private volatile DateField _dateField;
     private long _stopTimeout;
     private File _tempDirectory;
@@ -191,17 +189,6 @@ public class Server extends Handler.Abstract implements Attributes
     public Context getContext()
     {
         return _serverContext;
-    }
-
-    public void setRequestLog(RequestLog requestLog)
-    {
-        updateBean(_requestLog, requestLog);
-        _requestLog = requestLog;
-    }
-
-    public RequestLog getRequestLog()
-    {
-        return _requestLog;
     }
 
     public Request.Handler getErrorHandler()
@@ -338,7 +325,7 @@ public class Server extends Handler.Abstract implements Attributes
             }
 
             multiException.ifExceptionThrow();
-            LOG.info(String.format("Started %s @%dms", this, Uptime.getUptime()));
+            LOG.info(String.format("Started server %s", this));
         }
         catch (Throwable th)
         {
@@ -370,6 +357,7 @@ public class Server extends Handler.Abstract implements Attributes
     @Override
     protected void doStop() throws Exception
     {
+        System.out.println("");
         LOG.info(String.format("Stopped %s", this));
         Throwable multiException = null;
 

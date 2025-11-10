@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import ab.squirrel.util.TypeUtil;
-import ab.squirrel.util.Uptime;
 import ab.squirrel.util.annotation.ManagedAttribute;
 import ab.squirrel.util.annotation.ManagedObject;
 import ab.squirrel.util.thread.AutoLock;
@@ -96,8 +95,7 @@ public abstract class AbstractLifeCycle implements LifeCycle
                         }
                         catch (StopException e)
                         {
-                            if (LOG.isDebugEnabled())
-                                LOG.debug("Unable to stop", e);
+                            LOG.warn("Unable to start", e);
                             setStopping();
                             doStop();
                             setStopped();
@@ -247,8 +245,6 @@ public abstract class AbstractLifeCycle implements LifeCycle
         if (_state == State.STARTING)
         {
             _state = State.STARTED;
-            if (LOG.isDebugEnabled())
-                LOG.debug("STARTED @{}ms {}", Uptime.getUptime(), this);
             for (EventListener listener : _eventListener)
                 if (listener instanceof Listener)
                     ((Listener)listener).lifeCycleStarted(this);
@@ -257,8 +253,6 @@ public abstract class AbstractLifeCycle implements LifeCycle
 
     private void setStarting()
     {
-        if (LOG.isDebugEnabled())
-            LOG.debug("STARTING {}", this);
         _state = State.STARTING;
         for (EventListener listener : _eventListener)
             if (listener instanceof Listener)
@@ -267,8 +261,6 @@ public abstract class AbstractLifeCycle implements LifeCycle
 
     private void setStopping()
     {
-        if (LOG.isDebugEnabled())
-            LOG.debug("STOPPING {}", this);
         _state = State.STOPPING;
         for (EventListener listener : _eventListener)
             if (listener instanceof Listener)
@@ -280,8 +272,6 @@ public abstract class AbstractLifeCycle implements LifeCycle
         if (_state == State.STOPPING)
         {
             _state = State.STOPPED;
-            if (LOG.isDebugEnabled())
-                LOG.debug("STOPPED {}", this);
             for (EventListener listener : _eventListener)
                 if (listener instanceof Listener)
                     ((Listener)listener).lifeCycleStopped(this);
@@ -291,8 +281,6 @@ public abstract class AbstractLifeCycle implements LifeCycle
     private void setFailed(Throwable th)
     {
         _state = State.FAILED;
-        if (LOG.isDebugEnabled())
-            LOG.warn("FAILED {}: {}", this, th, th);
         for (EventListener listener : _eventListener)
         {
             if (listener instanceof Listener)
