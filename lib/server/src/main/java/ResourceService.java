@@ -49,7 +49,6 @@ import ab.squirrel.http.ResourceHttpContentFactory;
 
 import ab.squirrel.io.Content;
 import ab.squirrel.io.IOResources;
-import ab.squirrel.server.handler.ContextHandler;
 import ab.squirrel.util.Callback;
 /*
 import ab.squirrel.util.URIUtil;
@@ -97,14 +96,6 @@ public class ResourceService
     {
         String path = _rootDir + name;
         HttpContent content = _contentFactory.getContent(path == null ? "" : path);
-        if (content != null)
-        {
-            AliasCheck aliasCheck = ContextHandler.getContextHandler(request);
-            if (aliasCheck != null && !aliasCheck.checkAlias(path, content.getResource()))
-                return null;
-
-        }
-
         return content;
     }
 

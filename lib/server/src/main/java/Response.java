@@ -37,7 +37,7 @@ import ab.squirrel.http.UriCompliance;
 import ab.squirrel.io.ByteBufferPool;
 import ab.squirrel.io.Content;
 import ab.squirrel.io.QuietException;
-import ab.squirrel.server.handler.ErrorHandler;
+import ab.squirrel.server.ErrorHandler;
 import ab.squirrel.server.internal.HttpChannelState;
 import ab.squirrel.util.Callback;
 import ab.squirrel.util.StringUtil;

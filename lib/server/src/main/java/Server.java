@@ -35,8 +35,7 @@ import ab.squirrel.http.HttpHeader;
 import ab.squirrel.io.ArrayByteBufferPool;
 import ab.squirrel.io.ByteBufferPool;
 import ab.squirrel.io.Connection;
-import ab.squirrel.server.handler.ContextHandler;
-import ab.squirrel.server.handler.ErrorHandler;
+import ab.squirrel.server.ErrorHandler;
 import ab.squirrel.server.internal.ResponseHttpFields;
 import ab.squirrel.util.Attributes;
 import ab.squirrel.util.Callback;
@@ -209,7 +208,6 @@ public class Server extends Handler.Abstract implements Attributes
     {
         return _errorHandler;
     }
-
 
     public void setStopTimeout(long stopTimeout)
     {
@@ -454,7 +452,7 @@ public class Server extends Handler.Abstract implements Attributes
     }
 
     /**
-     * @return The URI of the first {@link NetworkConnector} and first {@link ContextHandler}, or null
+     * @return The URI of the first {@link NetworkConnector} or null
      */
     public URI getURI()
     {
@@ -471,9 +469,6 @@ public class Server extends Handler.Abstract implements Attributes
         if (connector == null)
             return null;
 
-        //ContextHandler context = getDescendant(ContextHandler.class);
-        ContextHandler context = null;
-
         try
         {
             String protocol = connector.getDefaultConnectionFactory().getProtocol();
@@ -485,21 +480,6 @@ public class Server extends Handler.Abstract implements Attributes
             int port = connector.getLocalPort();
 
             String path = "/";
-            if (context != null)
-            {
-                Optional<String> vhost = context.getVirtualHosts().stream()
-                    .filter(h -> !h.startsWith("*.") && !h.startsWith("@"))
-                    .findFirst();
-                if (vhost.isPresent())
-                {
-                    host = vhost.get();
-                    int at = host.indexOf('@');
-                    if (at > 0)
-                        host = host.substring(0, at);
-                }
-
-                path = context.getContextPath();
-            }
             return new URI(scheme, null, host, port, path, null, null);
         }
         catch (Exception e)
@@ -550,9 +530,7 @@ public class Server extends Handler.Abstract implements Attributes
 
     class ServerContext extends Attributes.Wrapper implements Context
     {
-        private final File jettyBase = IO.asFile(System.getProperty("jetty.base"));
-        private final File workDir = jettyBase != null && jettyBase.isDirectory() && jettyBase.canWrite() ? new File(jettyBase, "work") : null;
-        private final File tempDir = workDir != null && workDir.isDirectory() && workDir.canWrite() ? workDir : IO.asFile(System.getProperty("java.io.tmpdir"));
+        private final File tempDir = IO.asFile(System.getProperty("java.io.tmpdir"));
 
         private ServerContext()
         {

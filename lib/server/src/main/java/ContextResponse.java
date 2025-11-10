@@ -11,7 +11,7 @@
 // ========================================================================
 //
 
-package ab.squirrel.server.handler;
+package ab.squirrel.server;
 
 import java.nio.ByteBuffer;
 

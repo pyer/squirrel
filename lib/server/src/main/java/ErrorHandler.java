@@ -11,7 +11,7 @@
 // ========================================================================
 //
 
-package ab.squirrel.server.handler;
+package ab.squirrel.server;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -508,8 +508,6 @@ public class ErrorHandler implements Request.Handler
         Request.Handler errorHandler = null;
         if (context != null)
             errorHandler = context.getErrorHandler();
-        if (errorHandler == null && server != null)
-            errorHandler = server.getErrorHandler();
         return errorHandler;
     }
 

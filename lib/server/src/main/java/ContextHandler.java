@@ -11,7 +11,7 @@
 // ========================================================================
 //
 
-package ab.squirrel.server.handler;
+package ab.squirrel.server;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,14 +35,12 @@ import java.util.stream.Collectors;
 import ab.squirrel.http.HttpField;
 import ab.squirrel.http.HttpHeader;
 import ab.squirrel.http.HttpStatus;
-import ab.squirrel.server.AliasCheck;
 import ab.squirrel.server.Connector;
 import ab.squirrel.server.Context;
 import ab.squirrel.server.Handler;
 import ab.squirrel.server.Request;
 import ab.squirrel.server.Response;
 import ab.squirrel.server.Server;
-import ab.squirrel.server.SymlinkAllowedResourceAliasChecker;
 import ab.squirrel.util.Attributes;
 import ab.squirrel.util.Callback;
 import ab.squirrel.util.DecoratedObjectFactory;
@@ -65,7 +63,7 @@ import org.slf4j.LoggerFactory;
  * A {@link Handler} that scopes a request to a specific {@link Context}.
  */
 @ManagedObject
-public class ContextHandler extends Handler.Abstract implements Attributes, AliasCheck
+public class ContextHandler extends Handler.Abstract implements Attributes
 {
     private static final Logger LOG = LoggerFactory.getLogger(ContextHandler.class);
     private static final ThreadLocal<Context> __context = new ThreadLocal<>();
@@ -130,7 +128,6 @@ public class ContextHandler extends Handler.Abstract implements Attributes, Alia
     private Request.Handler _errorHandler;
     private boolean _allowNullPathInContext;
     private Index<ProtectedTargetType> _protectedTargets = Index.empty(false);
-    private final List<AliasCheck> _aliasChecks = new CopyOnWriteArrayList<>();
     private File _tempDirectory;
     private boolean _tempDirectoryPersisted = false;
     private boolean _tempDirectoryCreated = false;
@@ -177,9 +174,6 @@ public class ContextHandler extends Handler.Abstract implements Attributes, Alia
         _context = new ScopedContext();
         if (contextPath != null)
             setContextPath(contextPath);
-
-        if (File.separatorChar == '/')
-            addAliasCheck(new SymlinkAllowedResourceAliasChecker(this));
 
         // If the current classloader (or the one that loaded this class) is different
         // from the Server classloader, then use that as the initial classloader for the context.
@@ -604,15 +598,6 @@ public class ContextHandler extends Handler.Abstract implements Attributes, Alia
         {
             if (!Resources.isReadable(baseResource))
                 throw new IllegalArgumentException("Base Resource is not valid: " + baseResource);
-            if (baseResource.isAlias())
-            {
-                URI realUri = baseResource.getRealURI();
-                if (realUri == null)
-                    LOG.warn("Base Resource should not be an alias (100% of requests to context are subject to Security/Alias Checks): {}", baseResource);
-                else
-                    LOG.warn("Base Resource should not be an alias (100% of requests to context are subject to Security/Alias Checks): {} points to {}",
-                        baseResource, realUri.toASCIIString());
-            }
         }
 
         _availability.set(Availability.STARTING);
@@ -951,71 +936,6 @@ public class ContextHandler extends Handler.Abstract implements Attributes, Alia
             .toArray(String[]::new);
     }
 
-    /**
-     * Add an AliasCheck instance to possibly permit aliased resources
-     *
-     * @param check The alias checker
-     */
-    public void addAliasCheck(AliasCheck check)
-    {
-        _aliasChecks.add(check);
-        if (check instanceof LifeCycle)
-            addManaged((LifeCycle)check);
-        else
-            addBean(check);
-    }
-
-    /**
-     * @return Immutable list of Alias checks
-     */
-    public List<AliasCheck> getAliasChecks()
-    {
-        return Collections.unmodifiableList(_aliasChecks);
-    }
-
-    /**
-     * Set list of AliasCheck instances.
-     * @param checks list of AliasCheck instances
-     */
-    public void setAliasChecks(List<AliasCheck> checks)
-    {
-        clearAliasChecks();
-        checks.forEach(this::addAliasCheck);
-    }
-
-    /**
-     * clear the list of AliasChecks
-     */
-    public void clearAliasChecks()
-    {
-        _aliasChecks.forEach(this::removeBean);
-        _aliasChecks.clear();
-    }
-
-    @Override
-    public boolean checkAlias(String pathInContext, Resource resource)
-    {
-        // Is the resource aliased?
-        if (resource.isAlias())
-        {
-            if (LOG.isDebugEnabled())
-                LOG.debug("Aliased resource: {} -> {}", resource, resource.getRealURI());
-
-            // alias checks
-            for (AliasCheck check : _aliasChecks)
-            {
-                if (check.checkAlias(pathInContext, resource))
-                {
-                    if (LOG.isDebugEnabled())
-                        LOG.debug("Aliased resource: {} approved by {}", resource, check);
-                    return true;
-                }
-            }
-            return false;
-        }
-        return true;
-    }
-
     @Override
     public String toString()
     {
@@ -1074,8 +994,6 @@ public class ContextHandler extends Handler.Abstract implements Attributes, Alia
         public Request.Handler getErrorHandler()
         {
             Request.Handler handler = ContextHandler.this.getErrorHandler();
-            if (handler == null)
-                handler = getServer().getErrorHandler();
             return handler;
         }
 
