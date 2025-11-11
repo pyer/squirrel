@@ -30,7 +30,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntUnaryOperator;
 
-import ab.squirrel.util.ProcessorUtils;
 import ab.squirrel.util.annotation.ManagedAttribute;
 import ab.squirrel.util.annotation.ManagedObject;
 import ab.squirrel.util.component.Container;
@@ -65,13 +64,13 @@ public abstract class SelectorManager extends ContainerLifeCycle
 
     private static int defaultSelectors(Executor executor)
     {
+        int cpus = Runtime.getRuntime().availableProcessors() / 2;
         if (executor instanceof ThreadPool.SizedThreadPool)
         {
             int threads = ((ThreadPool.SizedThreadPool)executor).getMaxThreads();
-            int cpus = ProcessorUtils.availableProcessors();
-            return Math.max(1, Math.min(cpus / 2, threads / 16));
+            cpus = Math.min(cpus, threads / 16);
         }
-        return Math.max(1, ProcessorUtils.availableProcessors() / 2);
+        return Math.max(1, cpus);
     }
 
     protected SelectorManager(Executor executor, Scheduler scheduler)

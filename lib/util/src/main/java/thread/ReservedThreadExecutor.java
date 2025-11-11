@@ -20,7 +20,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import ab.squirrel.util.ProcessorUtils;
 import ab.squirrel.util.TypeUtil;
 import ab.squirrel.util.VirtualThreads;
 import ab.squirrel.util.annotation.ManagedAttribute;
@@ -115,13 +114,13 @@ public class ReservedThreadExecutor extends ContainerLifeCycle implements TryExe
             return capacity;
         if (VirtualThreads.isUseVirtualThreads(executor))
             return 0;
-        int cpus = ProcessorUtils.availableProcessors();
+        int cores = Runtime.getRuntime().availableProcessors();
         if (executor instanceof ThreadPool.SizedThreadPool)
         {
             int threads = ((ThreadPool.SizedThreadPool)executor).getMaxThreads();
-            return Math.max(1, TypeUtil.ceilToNextPowerOfTwo(Math.min(cpus, threads / 8)));
+            return Math.max(1, TypeUtil.ceilToNextPowerOfTwo(Math.min(cores, threads / 8)));
         }
-        return cpus;
+        return cores;
     }
 
     public Executor getExecutor()

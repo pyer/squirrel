@@ -21,8 +21,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import ab.squirrel.util.MemoryUtils;
-import ab.squirrel.util.ProcessorUtils;
 import ab.squirrel.util.TypeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,10 +37,10 @@ import org.slf4j.LoggerFactory;
  */
 public class ThreadIdPool<E>
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ThreadIdPool.class);
+    //private static final Logger LOG = LoggerFactory.getLogger(ThreadIdPool.class);
 
     // How far the entries in the AtomicReferenceArray are spread apart to avoid false sharing.
-    private static final int SPREAD_FACTOR = MemoryUtils.getReferencesPerCacheLine();
+    private static final int SPREAD_FACTOR = 16;
 
     private final int _capacity;
     private final AtomicReferenceArray<E> _items;
@@ -54,17 +52,21 @@ public class ThreadIdPool<E>
 
     public ThreadIdPool(int capacity)
     {
-        _capacity = calcCapacity(capacity);
+        if (capacity >= 0) {
+            _capacity = capacity;
+        } else {
+            int cores = Runtime.getRuntime().availableProcessors();
+            _capacity = 2 * TypeUtil.ceilToNextPowerOfTwo(cores);
+        }
         _items = new AtomicReferenceArray<>((_capacity + 1) * SPREAD_FACTOR);
-        if (LOG.isDebugEnabled())
-            LOG.debug("{}", this);
     }
 
     private static int calcCapacity(int capacity)
     {
         if (capacity >= 0)
             return capacity;
-        return 2 * TypeUtil.ceilToNextPowerOfTwo(ProcessorUtils.availableProcessors());
+        int cores = Runtime.getRuntime().availableProcessors();
+        return 2 * TypeUtil.ceilToNextPowerOfTwo(cores);
     }
 
     private static int toSlot(int index)

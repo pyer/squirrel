@@ -37,7 +37,6 @@ import ab.squirrel.io.ByteBufferPool;
 import ab.squirrel.io.EndPoint;
 import ab.squirrel.io.RetainableByteBuffer;
 import ab.squirrel.server.internal.HttpConnection;
-import ab.squirrel.util.ProcessorUtils;
 import ab.squirrel.util.StringUtil;
 import ab.squirrel.util.annotation.ManagedAttribute;
 import ab.squirrel.util.annotation.ManagedObject;
@@ -151,6 +150,7 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
     private ConnectionFactory _defaultConnectionFactory;
     /* The name used to link up virtual host configuration to named connectors */
     private String _name;
+    private int _cores;
     private int _acceptorPriorityDelta = -2;
     private boolean _accepting = true;
     private ThreadPoolBudget.Lease _lease;
@@ -188,10 +188,10 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
             addConnectionFactory(factory);
         }
 
-        int cores = ProcessorUtils.availableProcessors();
+        _cores = Runtime.getRuntime().availableProcessors();
         if (acceptors < 0)
             acceptors = 1;
-        if (acceptors > cores)
+        if (acceptors > _cores)
             LOG.warn("Acceptors should be <= availableProcessors: {} ", this);
         _acceptors = new Thread[acceptors];
     }
@@ -219,6 +219,14 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
     public long getIdleTimeout()
     {
         return _idleTimeout;
+    }
+
+    /**
+     * <p>Returns the number of processors which are available to the Java virtual machine.</p>
+     */
+    public int availableProcessors()
+    {
+        return _cores;
     }
 
     /**

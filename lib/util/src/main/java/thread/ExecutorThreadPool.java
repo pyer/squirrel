@@ -24,7 +24,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import ab.squirrel.util.ProcessorUtils;
 import ab.squirrel.util.VirtualThreads;
 import ab.squirrel.util.annotation.ManagedAttribute;
 import ab.squirrel.util.annotation.ManagedObject;
@@ -79,7 +78,7 @@ public class ExecutorThreadPool extends ContainerLifeCycle implements ThreadPool
 
     public ExecutorThreadPool(ThreadPoolExecutor executor, int reservedThreads, ThreadGroup group)
     {
-        this(executor, Math.min(ProcessorUtils.availableProcessors(), executor.getCorePoolSize()), reservedThreads, group);
+        this(executor, Math.min(Runtime.getRuntime().availableProcessors(), executor.getCorePoolSize()), reservedThreads, group);
     }
 
     private ExecutorThreadPool(ThreadPoolExecutor executor, int minThreads, int reservedThreads, ThreadGroup group)
