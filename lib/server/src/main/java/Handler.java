@@ -25,8 +25,8 @@ import ab.squirrel.util.component.ContainerLifeCycle;
 import ab.squirrel.util.component.Destroyable;
 import ab.squirrel.util.component.LifeCycle;
 import ab.squirrel.util.thread.Invocable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
 /**
  * <p>A Jetty component that handles HTTP requests, of any version (HTTP/1.1, HTTP/2 or HTTP/3).
@@ -86,10 +86,9 @@ public interface Handler extends LifeCycle, Destroyable, Request.Handler
     @ManagedObject
     abstract class Abstract extends ContainerLifeCycle implements Handler
     {
-        private static final Logger LOG = LoggerFactory.getLogger(Handler.class);
+        //private static final Logger LOG = LoggerFactory.getLogger(Handler.class);
 
         private final InvocationType _invocationType;
-        private Server _server;
 
         /**
          * <p>Creates a {@code Handler} with invocation type {@link InvocationType#BLOCKING}.</p>
@@ -98,22 +97,6 @@ public interface Handler extends LifeCycle, Destroyable, Request.Handler
         {
             _invocationType = InvocationType.BLOCKING;
 
-        }
-
-
-        @ManagedAttribute(value = "The Server associated with this Handler", readonly = true)
-        public Server getServer()
-        {
-            return _server;
-        }
-
-        public void setServer(Server server)
-        {
-            if (_server == server)
-                return;
-            if (isStarted())
-                throw new IllegalStateException(getState());
-            _server = server;
         }
 
         @Override
@@ -125,18 +108,12 @@ public interface Handler extends LifeCycle, Destroyable, Request.Handler
         @Override
         protected void doStart() throws Exception
         {
-            if (LOG.isDebugEnabled())
-                LOG.debug("starting {}", this);
-            if (_server == null)
-                LOG.warn("No Server set for {}", this);
             super.doStart();
         }
 
         @Override
         protected void doStop() throws Exception
         {
-            if (LOG.isDebugEnabled())
-                LOG.debug("stopping {}", this);
             super.doStop();
         }
 

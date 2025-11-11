@@ -35,7 +35,6 @@ import ab.squirrel.util.resource.Resource;
  *         for {@link Thread}s handling the request.</li>
  *     <li>is an {@link java.util.concurrent.Executor} that can execute jobs in with the {@link Thread#setContextClassLoader(ClassLoader) Thread context ClassLoader}</li>
  *     <li>is a {@link ab.squirrel.util.Decorator} using the {@link DecoratedObjectFactory } that can create objects specific to the context.</li>
- *     <li>has the same {@link #getTempDirectory() temporary director} specific to the context.</li>
  * </ul>
  * @see Server#getContext()
  */
@@ -104,11 +103,6 @@ public interface Context extends Attributes, Decorator, Executor
     {
         return getPathInContext(getContextPath(), canonicallyEncodedPath);
     }
-
-    /**
-     * @return a non-{@code null} temporary directory, configured either for the context, the server or the JVM
-     */
-    File getTempDirectory();
 
     /**
      * <p>Returns the URI path scoped to the passed context path.</p>

@@ -182,6 +182,7 @@ public class ContextHandler extends Handler.Abstract implements Attributes
             classLoader = this.getClass().getClassLoader();
         if (classLoader != Server.class.getClassLoader())
             _classLoader = classLoader;
+        _tempDirectory = IO.asFile(System.getProperty("java.io.tmpdir"));
     }
 /*
     protected ScopedContext newContext()
@@ -198,35 +199,6 @@ public class ContextHandler extends Handler.Abstract implements Attributes
     public File getTempDirectory()
     {
         return _tempDirectory;
-    }
-
-    /**
-     * <p>Set the temporary directory returned by {@link ScopedContext#getTempDirectory()}.  If not set here,
-     * then the {@link Server#getTempDirectory()} is returned by {@link ScopedContext#getTempDirectory()}.</p>
-     * <p>If {@link #isTempDirectoryPersistent()} is true, the directory set here is used directly but may
-     * be created if it does not exist. If {@link #isTempDirectoryPersistent()} is false, then any {@code File} set
-     * here will be deleted and recreated as a directory during {@link #start()} and will be deleted during
-     * {@link #stop()}.</p>
-     * @see #setTempDirectoryPersistent(boolean)
-     * @param tempDirectory A directory. If it does not exist, it must be able to be created during start.
-     */
-    public void setTempDirectory(File tempDirectory)
-    {
-        if (isStarted())
-            throw new IllegalStateException("Started");
-
-        if (tempDirectory != null)
-        {
-            try
-            {
-                tempDirectory = new File(tempDirectory.getCanonicalPath());
-            }
-            catch (IOException e)
-            {
-                LOG.warn("Unable to find canonical path for {}", tempDirectory, e);
-            }
-        }
-        _tempDirectory = tempDirectory;
     }
 
     /**
@@ -1022,18 +994,14 @@ public class ContextHandler extends Handler.Abstract implements Attributes
         }
 
         @Override
-        public File getTempDirectory()
-        {
-            File tempDirectory = ContextHandler.this.getTempDirectory();
-            if (tempDirectory == null)
-                tempDirectory = getServer().getContext().getTempDirectory();
-            return tempDirectory;
-        }
-
-        @Override
         public List<String> getVirtualHosts()
         {
             return ContextHandler.this.getVirtualHosts();
+        }
+
+        public File getTempDirectory()
+        {
+            return _tempDirectory;
         }
 
         public void call(Invocable.Callable callable, Request request) throws Exception
@@ -1124,15 +1092,13 @@ public class ContextHandler extends Handler.Abstract implements Attributes
 
         public void execute(Runnable runnable, Request request)
         {
-            getServer().getContext().execute(() -> run(runnable, request));
+            ContextHandler.this.getContext().execute(() -> run(runnable, request));
         }
 
         protected DecoratedObjectFactory getDecoratedObjectFactory()
         {
             DecoratedObjectFactory factory = ContextHandler.this.getBean(DecoratedObjectFactory.class);
-            if (factory != null)
-                return factory;
-            return getServer().getBean(DecoratedObjectFactory.class);
+            return factory;
         }
 
         @Override

@@ -78,7 +78,6 @@ public class Server extends Handler.Abstract implements Attributes
     private Request.Handler _errorHandler = new ErrorHandler();
     private volatile DateField _dateField;
     private long _stopTimeout;
-    private File _tempDirectory;
 
     public Server()
     {
@@ -132,48 +131,6 @@ public class Server extends Handler.Abstract implements Attributes
     }
 
     /**
-     * <p>Convenience method to call {@link #setTempDirectory(File)} from a String representation
-     * of the temporary directory.</p>
-     * @param temp A string representation of the temporary directory.
-     * @see #setTempDirectory(File)
-     */
-    public void setTempDirectory(String temp)
-    {
-        setTempDirectory(new File(temp));
-    }
-
-    /**
-     * <p>Set the temporary directory returned by {@link Context#getTempDirectory()} for the root
-     * {@link Context} returned {@link #getContext()}. If not set explicitly here, then the root
-     * {@link Context#getTempDirectory()} will return either the directory found at
-     * {@code new File(IO.asFile(System.getProperty("jetty.base")), "work")} if it exists,
-     * else the JVMs temporary directory as {@code IO.asFile(System.getProperty("java.io.tmpdir"))}.
-     * @param temp A directory that must exist and be writable or null to get the default.
-     */
-    public void setTempDirectory(File temp)
-    {
-        if (isStarted())
-            throw new IllegalStateException(getState());
-        if (temp != null && !temp.exists())
-            throw new IllegalArgumentException("Does not exist: " + temp);
-        if (temp != null && !temp.canWrite())
-            throw new IllegalArgumentException("Cannot write: " + temp);
-        _tempDirectory = temp;
-    }
-
-    /**
-     * @return The server temporary directory if set, else null. To always obtain a non-null
-     * temporary directory use {@link Context#getTempDirectory()} on {@link #getContext()}.
-     * @see #getContext()
-     * @see Context#getTempDirectory()
-     */
-    @ManagedAttribute(value = "The server temporary directory", readonly = true)
-    public File getTempDirectory()
-    {
-        return _tempDirectory;
-    }
-
-    /**
      * Get the {@link Context} associated with all {@link Request}s prior to being handled by a
      * {@link ContextHandler}. A {@code Server}'s {@link Context}:
      * <ul>
@@ -182,7 +139,6 @@ public class Server extends Handler.Abstract implements Attributes
      *     <li>is an {@link java.util.concurrent.Executor} that delegates to the {@link Server#getThreadPool() Server ThreadPool}</li>
      *     <li>is a {@link ab.squirrel.util.Decorator} using the {@link DecoratedObjectFactory} found
      *     as a {@link #getBean(Class) bean} of the {@link Server}</li>
-     *     <li>has the same {@link #getTempDirectory() temporary director} of the {@link Server#getTempDirectory() server}</li>
      * </ul>
      */
     public Context getContext()
@@ -465,7 +421,6 @@ public class Server extends Handler.Abstract implements Attributes
         }
     }
 
-    @Override
     public Server getServer()
     {
         return this;
@@ -492,7 +447,6 @@ public class Server extends Handler.Abstract implements Attributes
 
     class ServerContext extends Attributes.Wrapper implements Context
     {
-        private final File tempDir = IO.asFile(System.getProperty("java.io.tmpdir"));
 
         private ServerContext()
         {
@@ -570,12 +524,6 @@ public class Server extends Handler.Abstract implements Attributes
         public String getPathInContext(String canonicallyEncodedPath)
         {
             return canonicallyEncodedPath;
-        }
-
-        @Override
-        public File getTempDirectory()
-        {
-            return Objects.requireNonNullElse(Server.this.getTempDirectory(), tempDir);
         }
 
         @Override

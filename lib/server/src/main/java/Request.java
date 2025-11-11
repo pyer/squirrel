@@ -580,36 +580,6 @@ public interface Request extends Attributes, Content.Source
     }
 
     /**
-     * <p>Get a {@link MultiPartConfig.Builder} given a {@link Request} and a location.</p>
-     *
-     * <p>If the location is null this will extract the {@link Context} temp directory from the request.
-     * The {@code maxHeaderSize}, {@link MultiPartCompliance}, {@link ComplianceViolation.Listener}
-     * are also extracted from the request. Additional settings can be configured through the
-     * {@link MultiPartConfig.Builder} which is returned.</p>
-     *
-     * @param request the request.
-     * @param location the temp directory location, or null to use the context default.
-     * @return a {@link MultiPartConfig} with settings extracted from the request.
-     */
-    static MultiPartConfig.Builder getMultiPartConfig(Request request, Path location)
-    {
-        HttpChannel httpChannel = HttpChannel.from(request);
-        HttpConfiguration httpConfiguration = request.getConnectionMetaData().getHttpConfiguration();
-        MultiPartCompliance multiPartCompliance = httpConfiguration.getMultiPartCompliance();
-        ComplianceViolation.Listener complianceViolationListener = httpChannel.getComplianceViolationListener();
-        int maxHeaderSize = httpConfiguration.getRequestHeaderSize();
-
-        if (location == null)
-            location = request.getContext().getTempDirectory().toPath();
-
-        return new MultiPartConfig.Builder()
-            .location(location)
-            .maxHeadersSize(maxHeaderSize)
-            .complianceMode(multiPartCompliance)
-            .violationListener(complianceViolationListener);
-    }
-
-    /**
      * This interface will be detected by the {@link #wrap(Request, HttpURI)} static method to wrap the request
      * changing its target to a given path. If a {@link Request} implements this interface it can
      * be obtained with the {@link Request#as(Request, Class)} method.
