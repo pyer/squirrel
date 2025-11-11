@@ -125,6 +125,26 @@ class ArrayTernaryTrie<V> extends AbstractTrie<V>
         Arrays.fill(_key, null);
     }
 
+    /**
+     * Returns the sum of its arguments, capping to {@code maxValue}.
+     *
+     * @param a the first value
+     * @param b the second value
+     * @return the sum of the values, capped to {@code maxValue}
+     */
+    private int cappedAdd(int a, int b, int maxValue)
+    {
+        try
+        {
+            int sum = Math.addExact(a, b);
+            return Math.min(sum, maxValue);
+        }
+        catch (ArithmeticException x)
+        {
+            return maxValue;
+        }
+    }
+
     @Override
     public boolean put(String s, V v)
     {
@@ -149,7 +169,7 @@ class ArrayTernaryTrie<V> extends AbstractTrie<V>
                 // Do we need to create the new row?
                 if (t == _rows)
                 {
-                    _rows = (char)MathUtils.cappedAdd(_rows, 1, _key.length);
+                    _rows = (char)cappedAdd(_rows, 1, _key.length);
                     if (_rows == _key.length)
                         return false;
                     _tree[row] = c;

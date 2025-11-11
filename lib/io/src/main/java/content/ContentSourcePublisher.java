@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import ab.squirrel.io.Content;
 import ab.squirrel.util.IteratingCallback;
-import ab.squirrel.util.MathUtils;
 import ab.squirrel.util.StaticException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -219,6 +218,23 @@ public class ContentSourcePublisher implements Flow.Publisher<Content.Chunk>
             return Action.IDLE;
         }
 
+        /**
+         * Returns the sum of its arguments, capping to {@link Long#MAX_VALUE} if they overflow.
+         *
+         * @param a the first value
+         * @param b the second value
+         * @return the sum of the values, capped to {@link Long#MAX_VALUE}
+         */
+        private long cappedAdd(long a, long b)
+        {
+          try {
+            return Math.addExact(a, b);
+          }
+          catch (ArithmeticException x) {
+            return Long.MAX_VALUE;
+          }
+        }
+
         @Override
         public void request(long n)
         {
@@ -236,7 +252,7 @@ public class ContentSourcePublisher implements Flow.Publisher<Content.Chunk>
 
             // As per rule 3.17, when demand overflows `Long.MAX_VALUE`
             // we treat the signalled demand as "effectively unbounded"
-            if (demand.updateAndGet(it -> it == NO_MORE_DEMAND ? it : MathUtils.cappedAdd(it, n)) != NO_MORE_DEMAND)
+            if (demand.updateAndGet(it -> it == NO_MORE_DEMAND ? it : cappedAdd(it, n)) != NO_MORE_DEMAND)
                 this.iterate();
         }
 
