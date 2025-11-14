@@ -980,7 +980,6 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
             return false;
         }
 
-        @Override
         public void badMessage(HttpException failure)
         {
             if (LOG.isDebugEnabled())

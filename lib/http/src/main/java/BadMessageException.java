@@ -19,7 +19,8 @@ package ab.squirrel.http;
  * responses.</p>
  */
 @SuppressWarnings("serial")
-public class BadMessageException extends HttpException.RuntimeException
+public class BadMessageException extends java.lang.RuntimeException
+//    class RuntimeException extends java.lang.RuntimeException implements HttpException
 {
     public BadMessageException()
     {
@@ -48,7 +49,8 @@ public class BadMessageException extends HttpException.RuntimeException
 
     public BadMessageException(int code, String reason, Throwable cause)
     {
-        super(code, reason, cause);
+        super(code + ": " + reason, cause);
         assert code >= 400 && code < 500;
     }
+
 }

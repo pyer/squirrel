@@ -13,24 +13,16 @@
 
 package ab.squirrel.http;
 
-import ab.squirrel.io.QuietException;
-import ab.squirrel.util.ExceptionUtil;
-
 /**
  * <p>A tagging interface for Exceptions that carry a HTTP response code and reason.</p>
  * <p>Exception sub-classes that implement this interface will be caught by the container
  * and the {@link #getCode()} used to send a response.</p>
  */
-public interface HttpException extends QuietException
+public interface HttpException
 {
     int getCode();
 
     String getReason();
-
-    static void throwAsUnchecked(HttpException httpException)
-    {
-        ExceptionUtil.ifExceptionThrowUnchecked((Throwable)httpException);
-    }
 
     /**
      * <p>Exception thrown to indicate a Bad HTTP Message has either been received
@@ -77,43 +69,4 @@ public interface HttpException extends QuietException
         }
     }
 
-    /**
-     * <p>Exception thrown to indicate a Bad HTTP Message has either been received
-     * or attempted to be generated.  Typically these are handled with either 400
-     * or 500 responses.</p>
-     */
-    class IllegalArgumentException extends java.lang.IllegalArgumentException implements HttpException
-    {
-        private final int _code;
-        private final String _reason;
-
-        public IllegalArgumentException(int code)
-        {
-            this(code, null, null);
-        }
-
-        public IllegalArgumentException(int code, String reason)
-        {
-            this(code, reason, null);
-        }
-
-        public IllegalArgumentException(int code, String reason, Throwable cause)
-        {
-            super(code + ": " + reason, cause);
-            _code = code;
-            _reason = reason;
-        }
-
-        @Override
-        public int getCode()
-        {
-            return _code;
-        }
-
-        @Override
-        public String getReason()
-        {
-            return _reason;
-        }
-    }
 }

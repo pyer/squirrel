@@ -27,7 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
+//import java.util.concurrent.TimeUnit;
 
 import ab.squirrel.http.DateGenerator;
 import ab.squirrel.http.HttpField;
@@ -40,9 +40,8 @@ import ab.squirrel.server.internal.ResponseHttpFields;
 import ab.squirrel.util.Attributes;
 import ab.squirrel.util.Callback;
 import ab.squirrel.util.DecoratedObjectFactory;
-import ab.squirrel.util.ExceptionUtil;
 import ab.squirrel.util.IO;
-import ab.squirrel.util.NanoTime;
+//import ab.squirrel.util.NanoTime;
 import ab.squirrel.util.annotation.ManagedAttribute;
 import ab.squirrel.util.annotation.ManagedObject;
 import ab.squirrel.util.annotation.Name;
@@ -77,7 +76,6 @@ public class Server extends Handler.Abstract implements Attributes
     private final AutoLock _dateLock = new AutoLock();
     private Request.Handler _errorHandler = new ErrorHandler();
     private volatile DateField _dateField;
-    private long _stopTimeout;
 
     public Server()
     {
@@ -151,16 +149,6 @@ public class Server extends Handler.Abstract implements Attributes
         return _errorHandler;
     }
 
-    public void setStopTimeout(long stopTimeout)
-    {
-        _stopTimeout = stopTimeout;
-    }
-
-    public long getStopTimeout()
-    {
-        return _stopTimeout;
-    }
-
     /*
      * Hhandlers
      */
@@ -230,68 +218,30 @@ public class Server extends Handler.Abstract implements Attributes
     @Override
     protected void doStart() throws Exception
     {
-        try
-        {
             //The Server should be stopped when the jvm exits, register
             //with the shutdown handler thread.
             ShutdownThread.register(this);
 
-            final ExceptionUtil.MultiException multiException = new ExceptionUtil.MultiException();
-
             // Open network connector to ensure ports are available
             _connectors.stream().filter(NetworkConnector.class::isInstance).map(NetworkConnector.class::cast).forEach(connector ->
                 {
-                    try
-                    {
+                    try {
                         connector.open();
                     }
-                    catch (Throwable th)
-                    {
-                        multiException.add(th);
+                    catch (IOException e) {
+                        LOG.error("open connector", e);
                     }
                 });
-            // Throw now if verified start sequence and there was an open exception
-            multiException.ifExceptionThrow();
 
             // Start the server and components, but not connectors!
             // #start(LifeCycle) is overridden so that connectors are not started
             super.doStart();
 
             // start connectors
-            for (Connector connector : _connectors)
-            {
-                try
-                {
-                    connector.start();
-                }
-                catch (Throwable e)
-                {
-                    multiException.add(e);
-                    // stop any started connectors
-                    _connectors.stream().filter(LifeCycle::isRunning).map(Object.class::cast).forEach(LifeCycle::stop);
-                }
+            for (Connector connector : _connectors) {
+                connector.start();
             }
-
-            multiException.ifExceptionThrow();
-            LOG.info(String.format("Started server %s", this));
-        }
-        catch (Throwable th)
-        {
-            // Close any connectors that were opened
-            _connectors.stream().filter(NetworkConnector.class::isInstance).map(NetworkConnector.class::cast).forEach(nc ->
-            {
-                try
-                {
-                    nc.close();
-                }
-                catch (Throwable th2)
-                {
-                    if (th != th2)
-                        th.addSuppressed(th2);
-                }
-            });
-            throw th;
-        }
+            LOG.info(String.format("Start server %s", this));
     }
 
     @Override
@@ -306,51 +256,16 @@ public class Server extends Handler.Abstract implements Attributes
     protected void doStop() throws Exception
     {
         System.out.println("");
-        LOG.info(String.format("Stopped %s", this));
-        Throwable multiException = null;
-
-        if (getStopTimeout() > 0)
-        {
-        LOG.info(String.format("Timeout server %d", getStopTimeout()));
-            long end = NanoTime.now() + TimeUnit.MILLISECONDS.toNanos(getStopTimeout());
-            try
-            {
-                Graceful.shutdown(this).get(getStopTimeout(), TimeUnit.MILLISECONDS);
-            }
-            catch (Throwable e)
-            {
-                multiException = ExceptionUtil.combine(multiException, e);
-            }
-            QueuedThreadPool qtp = getBean(QueuedThreadPool.class);
-            if (qtp != null)
-                qtp.setStopTimeout(Math.max(1000L, NanoTime.millisUntil(end)));
-        }
+        LOG.info(String.format("Stop server %s", this));
 
         // Now stop the connectors (this will close existing connections)
-        for (Connector connector : _connectors)
-        {
-            try
-            {
+        for (Connector connector : _connectors) {
                 connector.stop();
-            }
-            catch (Throwable e)
-            {
-                multiException = ExceptionUtil.combine(multiException, e);
-            }
         }
 
         // And finally stop everything else
-        try
-        {
-            super.doStop();
-        }
-        catch (Throwable e)
-        {
-            multiException = ExceptionUtil.combine(multiException, e);
-        }
-
+        super.doStop();
         ShutdownThread.deregister(this);
-        ExceptionUtil.ifExceptionThrow(multiException);
     }
 
     @Override
@@ -429,7 +344,7 @@ public class Server extends Handler.Abstract implements Attributes
     @Override
     public String toString()
     {
-        return String.format("%s[stop=%d]", super.toString(), getStopTimeout());
+        return super.toString();
     }
 
     private static class DateField

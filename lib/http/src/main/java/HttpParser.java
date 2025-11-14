@@ -1745,23 +1745,14 @@ public class HttpParser
         catch (Throwable x)
         {
             BufferUtil.clear(buffer);
-            HttpException bad = x instanceof HttpException http
-                ? http
-                : new BadMessageException(_requestParser ? "Bad Request" : "Bad Response", x);
-            badMessage(bad);
+            BadMessageException bme = new BadMessageException(_requestParser ? "Bad Request" : "Bad Response", x);    
+            setState(State.CLOSE);
+            if (_headerComplete)
+                _handler.earlyEOF();
+            else
+                _handler.badMessage(bme);
         }
         return false;
-    }
-
-    protected void badMessage(HttpException x)
-    {
-        if (debugEnabled)
-            LOG.debug("Parse exception: {} for {}", this, _handler, x);
-        setState(State.CLOSE);
-        if (_headerComplete)
-            _handler.earlyEOF();
-        else
-            _handler.badMessage(x);
     }
 
     protected boolean parseContent(ByteBuffer buffer)
@@ -2133,7 +2124,7 @@ public class HttpParser
          *
          * @param failure the failure with the bad message information
          */
-        default void badMessage(HttpException failure)
+        default void badMessage(BadMessageException failure)
         {
         }
     }
