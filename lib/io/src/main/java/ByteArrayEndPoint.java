@@ -368,7 +368,7 @@ public class ByteArrayEndPoint extends AbstractEndPoint
             while (true)
             {
                 if (!isOpen())
-                    throw new EofException("CLOSED");
+                    throw new EOFException("CLOSED");
 
                 if (isInputShutdown())
                     return -1;

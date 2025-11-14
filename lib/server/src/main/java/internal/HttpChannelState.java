@@ -13,6 +13,7 @@
 
 package ab.squirrel.server.internal;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritePendingException;
@@ -44,7 +45,6 @@ import ab.squirrel.http.Trailers;
 import ab.squirrel.http.UriCompliance;
 import ab.squirrel.io.ByteBufferPool;
 import ab.squirrel.io.Content;
-import ab.squirrel.io.EofException;
 import ab.squirrel.server.Components;
 import ab.squirrel.server.ConnectionMetaData;
 import ab.squirrel.server.Context;
@@ -487,7 +487,7 @@ public class HttpChannelState implements HttpChannel, Components
             if (_stream == null)
                 return null;
         }
-        return onFailure(new EofException());
+        return onFailure(new EOFException());
     }
 
     public void addHttpStreamWrapper(Function<HttpStream, HttpStream> onStreamEvent)

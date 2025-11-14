@@ -105,23 +105,14 @@ public class SocketChannelEndPoint extends SelectableChannelEndPoint
     @Override
     public boolean flush(ByteBuffer... buffers) throws IOException
     {
-        long flushed;
-        try
-        {
-            flushed = getChannel().write(buffers);
-            if (LOG.isDebugEnabled())
-                LOG.debug("flushed {} {}", flushed, this);
-        }
-        catch (IOException e)
-        {
-            throw new EofException(e);
-        }
+        long flushed = getChannel().write(buffers);
+        if (LOG.isDebugEnabled())
+            LOG.debug("flushed {} {}", flushed, this);
 
         if (flushed > 0)
             notIdle();
 
-        for (ByteBuffer b : buffers)
-        {
+        for (ByteBuffer b : buffers) {
             if (!BufferUtil.isEmpty(b))
                 return false;
         }

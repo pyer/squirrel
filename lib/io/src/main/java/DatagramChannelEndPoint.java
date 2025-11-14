@@ -13,6 +13,7 @@
 
 package ab.squirrel.io;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -84,8 +85,7 @@ public class DatagramChannelEndPoint extends SelectableChannelEndPoint
     {
         boolean flushedAll = true;
         long flushed = 0;
-        try
-        {
+
             if (LOG.isDebugEnabled())
                 LOG.debug("flushing {} buffer(s) to {}", buffers.length, address);
             for (ByteBuffer buffer : buffers)
@@ -100,11 +100,6 @@ public class DatagramChannelEndPoint extends SelectableChannelEndPoint
             }
             if (LOG.isDebugEnabled())
                 LOG.debug("flushed {} byte(s), all flushed? {} - {}", flushed, flushedAll, this);
-        }
-        catch (IOException e)
-        {
-            throw new EofException(e);
-        }
 
         if (flushed > 0)
             notIdle();

@@ -129,7 +129,7 @@ public interface EndPoint extends Closeable
      * a {@link #fill(ByteBuffer)}.
      * Once the input is shutdown, all calls to
      * {@link #fill(ByteBuffer)} will  return -1, until such time as the
-     * end point is close, when they will return {@link EofException}.</p>
+     * end point is close, when they will return EOFException.</p>
      *
      * @return true if the input is shutdown or the endpoint is closed.
      */

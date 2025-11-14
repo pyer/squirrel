@@ -13,6 +13,7 @@
 
 package ab.squirrel.server.internal;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritePendingException;
@@ -49,7 +50,6 @@ import ab.squirrel.io.ByteBufferPool;
 import ab.squirrel.io.Connection;
 import ab.squirrel.io.Content;
 import ab.squirrel.io.EndPoint;
-import ab.squirrel.io.EofException;
 import ab.squirrel.io.RetainableByteBuffer;
 import ab.squirrel.io.RuntimeIOException;
 import ab.squirrel.server.AbstractMetaDataConnection;
@@ -710,7 +710,7 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
             else
             {
                 if (isClosed())
-                    callback.failed(new EofException());
+                    callback.failed(new EOFException());
                 else
                     callback.failed(new WritePendingException());
                 return false;
@@ -741,7 +741,7 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
                 switch (result)
                 {
                     case NEED_INFO:
-                        throw new EofException("request lifecycle violation");
+                        throw new EOFException("request lifecycle violation");
 
                     case NEED_HEADER:
                     {
@@ -1578,7 +1578,7 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
      * HttpParser converts some bad message event into early EOF.
      * However, we want to send a 400 (not a 500) to the client because it's a client error.
      */
-    private static class HttpEofException extends EofException implements HttpException
+    private static class HttpEofException extends Throwable implements HttpException
     {
         private HttpEofException()
         {
