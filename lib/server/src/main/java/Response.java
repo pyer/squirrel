@@ -36,7 +36,6 @@ import ab.squirrel.http.Trailers;
 import ab.squirrel.http.UriCompliance;
 import ab.squirrel.io.ByteBufferPool;
 import ab.squirrel.io.Content;
-import ab.squirrel.io.QuietException;
 import ab.squirrel.server.ErrorHandler;
 import ab.squirrel.server.internal.HttpChannelState;
 import ab.squirrel.util.Callback;
@@ -551,10 +550,10 @@ public interface Response extends Content.Sink
         // public field that will force a transitive dependency on SLF4J.
         Logger logger = LoggerFactory.getLogger(Response.class);
 
-        // Let's be less verbose with BadMessageExceptions & QuietExceptions
+        // Let's be less verbose with BadMessageExceptions
         if (logger.isDebugEnabled())
             logger.debug("writeError: status={}, message={}, response={}", status, message, response, cause);
-        else if (cause instanceof QuietException || cause instanceof TimeoutException)
+        else if (cause instanceof TimeoutException)
             logger.debug("writeError: status={}, message={}, response={} {}", status, message, response, cause.toString());
         else if (cause != null)
             logger.warn("writeError: status={}, message={}, response={}", status, message, response, cause);
