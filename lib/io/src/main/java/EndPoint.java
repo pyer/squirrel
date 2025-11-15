@@ -40,10 +40,6 @@ import ab.squirrel.util.thread.Invocable;
  * and be notified via the {@link Callback} when the write completes
  * (i.e. all the buffers have been flushed), either successfully or
  * with a failure.</p>
- * <p>Connection-less reads are performed using {@link #receive(ByteBuffer)}.
- * Similarly, connection-less flushes are performed using
- * {@link #send(SocketAddress, ByteBuffer...)} and connection-less writes
- * using {@link #write(Callback, SocketAddress, ByteBuffer...)}.</p>
  * <p>While all the I/O methods are non-blocking, they can be easily
  * converted to blocking using either {@link ab.squirrel.util.Blocker}
  * or {@link Callback.Completable}:</p>
@@ -65,11 +61,6 @@ import ab.squirrel.util.thread.Invocable;
  */
 public interface EndPoint extends Closeable
 {
-    /**
-     * <p>Constant returned by {@link #receive(ByteBuffer)} to indicate the end-of-file.</p>
-     */
-    SocketAddress EOF = InetSocketAddress.createUnresolved("", 0);
-
     /**
      * Marks an {@code EndPoint} that wraps another {@code EndPoint}.
      */
@@ -170,24 +161,6 @@ public interface EndPoint extends Closeable
     }
 
     /**
-     * <p>Receives data into the given buffer from the returned address.</p>
-     * <p>This method should be used to receive UDP data.</p>
-     *
-     * @param buffer the buffer to fill with data
-     * @return the peer address that sent the data, or {@link #EOF}
-     * @throws IOException if the receive fails
-     */
-    default SocketAddress receive(ByteBuffer buffer) throws IOException
-    {
-        int filled = fill(buffer);
-        if (filled < 0)
-            return EndPoint.EOF;
-        if (filled == 0)
-            return null;
-        return getRemoteSocketAddress();
-    }
-
-    /**
      * <p>Flushes data from the passed header/buffer to this endpoint.</p>
      * <p>As many bytes as can be consumed are taken from the header/buffer
      * position up until the buffer limit.
@@ -202,21 +175,6 @@ public interface EndPoint extends Closeable
     default boolean flush(ByteBuffer... buffer) throws IOException
     {
         throw new UnsupportedOperationException();
-    }
-
-    /**
-     * <p>Sends to the given address the data in the given buffers.</p>
-     * <p>This methods should be used to send UDP data.</p>
-     *
-     * @param address the peer address to send data to
-     * @param buffers the buffers containing the data to send
-     * @return true if all the buffers have been consumed
-     * @throws IOException if the send fails
-     * @see #write(Callback, SocketAddress, ByteBuffer...)
-     */
-    default boolean send(SocketAddress address, ByteBuffer... buffers) throws IOException
-    {
-        return flush(buffers);
     }
 
     /**
@@ -282,7 +240,6 @@ public interface EndPoint extends Closeable
      * @param address the peer address to send data to
      * @param buffers the buffers containing the data to send
      * @throws WritePendingException if a previous write was initiated but was not yet completed
-     * @see #send(SocketAddress, ByteBuffer...)
      */
     default void write(Callback callback, SocketAddress address, ByteBuffer... buffers) throws WritePendingException
     {

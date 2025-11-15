@@ -419,21 +419,13 @@ public abstract class WriteFlusher
         while (progress && buffers != null)
         {
             long before = BufferUtil.remaining(buffers);
-            boolean flushed = address == null ? _endPoint.flush(buffers) : ((DatagramChannelEndPoint)_endPoint).send(address, buffers);
+            boolean flushed = _endPoint.flush(buffers);
             long after = BufferUtil.remaining(buffers);
             long written = before - after;
 
             if (LOG.isDebugEnabled())
                 LOG.debug("Flushed={} written={} remaining={} {}", flushed, written, after, this);
 
-/*
-            if (written > 0)
-            {
-                Connection connection = _endPoint.getConnection();
-                if (connection instanceof Listener listener)
-                    listener.onFlushed(written);
-            }
-*/
             if (flushed)
                 return null;
 

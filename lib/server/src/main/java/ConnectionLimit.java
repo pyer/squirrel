@@ -15,12 +15,12 @@ package ab.squirrel.server;
 
 import java.nio.channels.SelectableChannel;
 import java.util.ArrayList;
+import java.util.EventListener;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import ab.squirrel.io.Connection;
-import ab.squirrel.io.Connection.Listener;
 import ab.squirrel.io.EndPoint;
 import ab.squirrel.io.SelectorManager;
 import ab.squirrel.util.annotation.ManagedAttribute;
@@ -50,11 +50,10 @@ import org.slf4j.LoggerFactory;
  * </pre>
  *
  * @see LowResourceMonitor
- * @see Connection.Listener
  * @see SelectorManager.AcceptListener
  */
 @ManagedObject
-public class ConnectionLimit extends AbstractLifeCycle implements Listener, SelectorManager.AcceptListener
+public class ConnectionLimit extends AbstractLifeCycle implements EventListener, SelectorManager.AcceptListener
 {
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionLimit.class);
 
@@ -252,7 +251,6 @@ public class ConnectionLimit extends AbstractLifeCycle implements Listener, Sele
     {
     }
 
-    @Override
     public void onOpened(Connection connection)
     {
         try (AutoLock l = _lock.lock())
@@ -264,7 +262,6 @@ public class ConnectionLimit extends AbstractLifeCycle implements Listener, Sele
         }
     }
 
-    @Override
     public void onClosed(Connection connection)
     {
         try (AutoLock l = _lock.lock())
