@@ -120,12 +120,6 @@ public abstract class SelectableChannelEndPoint extends AbstractEndPoint impleme
     }
 
     @Override
-    public Object getTransport()
-    {
-        return getChannel();
-    }
-
-    @Override
     public SocketAddress getLocalSocketAddress()
     {
         try

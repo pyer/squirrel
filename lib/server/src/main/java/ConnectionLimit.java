@@ -257,7 +257,6 @@ public class ConnectionLimit extends AbstractLifeCycle implements Listener, Sele
     {
         try (AutoLock l = _lock.lock())
         {
-            _accepting.remove(connection.getEndPoint().getTransport());
             _connections++;
             if (LOG.isDebugEnabled())
                 LOG.debug("onOpened ({}+{}) < {} {}", _accepting.size(), _connections, _maxConnections, connection);

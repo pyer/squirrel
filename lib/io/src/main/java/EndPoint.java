@@ -220,11 +220,6 @@ public interface EndPoint extends Closeable
     }
 
     /**
-     * @return The underlying transport object (socket, channel, etc.)
-     */
-    Object getTransport();
-
-    /**
      * <p>Returns the idle timeout in ms.</p>
      * <p>The idle timeout is the time the endpoint can be idle before
      * its close is initiated.</p>

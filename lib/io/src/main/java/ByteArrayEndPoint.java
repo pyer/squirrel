@@ -465,12 +465,6 @@ public class ByteArrayEndPoint extends AbstractEndPoint
         super.reset();
     }
 
-    @Override
-    public Object getTransport()
-    {
-        return null;
-    }
-
     /**
      * @return the growOutput
      */

@@ -357,12 +357,6 @@ public class ServerConnector extends AbstractNetworkConnector
     }
 
     @Override
-    public Object getTransport()
-    {
-        return _acceptChannel;
-    }
-
-    @Override
     @ManagedAttribute("local port")
     public int getLocalPort()
     {

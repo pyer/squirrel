@@ -100,12 +100,6 @@ public class MemoryEndPointPipe implements EndPoint.Pipe
         }
 
         @Override
-        public Object getTransport()
-        {
-            return null;
-        }
-
-        @Override
         public SocketAddress getLocalSocketAddress()
         {
             return localAddress;

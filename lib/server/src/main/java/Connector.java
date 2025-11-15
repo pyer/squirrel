@@ -83,12 +83,6 @@ public interface Connector extends LifeCycle, Container, Graceful
     public long getIdleTimeout();
 
     /**
-     * Get the underlying socket, channel, buffer etc. for the connector..
-     * @return the underlying socket, channel, buffer etc. for the connector.
-     */
-    public Object getTransport();
-
-    /**
      * @return immutable collection of connected endpoints
      */
     public Collection<EndPoint> getConnectedEndPoints();
