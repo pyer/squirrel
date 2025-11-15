@@ -155,7 +155,7 @@ public interface Transport
      */
     default Connection newConnection(EndPoint endPoint, Map<String, Object> context) throws IOException
     {
-        ClientConnectionFactory factory = (ClientConnectionFactory)context.get(ClientConnector.CLIENT_CONNECTION_FACTORY_CONTEXT_KEY);
+        ClientConnectionFactory factory = (ClientConnectionFactory)context.get("ab.squirrel.client.connector.clientConnectionFactory");
         return factory.newConnection(endPoint, context);
     }
 
