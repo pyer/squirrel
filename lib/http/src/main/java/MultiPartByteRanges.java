@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
 import ab.squirrel.io.ByteBufferPool;
 import ab.squirrel.io.Content;
 import ab.squirrel.io.IOResources;
-import ab.squirrel.io.content.ContentSourceCompletableFuture;
+import ab.squirrel.io.content.AbstractContentSource;
 import ab.squirrel.util.resource.Resource;
 import ab.squirrel.util.thread.AutoLock;
 
@@ -269,7 +269,7 @@ public class MultiPartByteRanges
 
         public CompletableFuture<MultiPartByteRanges.Parts> parse(Content.Source content)
         {
-            ContentSourceCompletableFuture<MultiPartByteRanges.Parts> futureParts = new ContentSourceCompletableFuture<>(content)
+            AbstractContentSource<MultiPartByteRanges.Parts> futureParts = new AbstractContentSource<>(content)
             {
                 @Override
                 protected MultiPartByteRanges.Parts parse(Content.Chunk chunk) throws Throwable

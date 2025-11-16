@@ -23,7 +23,7 @@ import ab.squirrel.io.Content;
  * available via a {@link CompletableFuture}.</p>
  * <p>An example usage to asynchronously read UTF-8 content is:</p>
  * <pre>{@code
- * public static class CompletableUTF8String extends ContentSourceCompletableFuture<String>;
+ * public static class CompletableUTF8String extends AbstractContentSource<String>;
  * {
  *     private final Utf8StringBuilder builder = new Utf8StringBuilder();
  *
@@ -53,11 +53,11 @@ import ab.squirrel.io.Content;
  * String s = cs.get();
  * }</pre>
  */
-public abstract class ContentSourceCompletableFuture<X> extends CompletableFuture<X>
+public abstract class AbstractContentSource<X> extends CompletableFuture<X>
 {
     private final Content.Source _content;
 
-    public ContentSourceCompletableFuture(Content.Source content)
+    public AbstractContentSource(Content.Source content)
     {
         _content = content;
     }

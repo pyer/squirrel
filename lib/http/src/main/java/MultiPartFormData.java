@@ -29,7 +29,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 import ab.squirrel.io.Content;
-import ab.squirrel.io.content.ContentSourceCompletableFuture;
+import ab.squirrel.io.content.AbstractContentSource;
 import ab.squirrel.util.Attributes;
 import ab.squirrel.util.IO;
 import ab.squirrel.util.StringUtil;
@@ -297,7 +297,7 @@ public class MultiPartFormData
 
         public CompletableFuture<Parts> parse(Content.Source content)
         {
-            ContentSourceCompletableFuture<Parts> futureParts = new ContentSourceCompletableFuture<>(content)
+            AbstractContentSource<Parts> futureParts = new AbstractContentSource<>(content)
             {
                 @Override
                 protected Parts parse(Content.Chunk chunk) throws Throwable

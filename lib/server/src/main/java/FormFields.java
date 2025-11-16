@@ -22,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import ab.squirrel.http.HttpHeader;
 import ab.squirrel.http.MimeTypes;
 import ab.squirrel.io.Content;
-import ab.squirrel.io.content.ContentSourceCompletableFuture;
+import ab.squirrel.io.content.AbstractContentSource;
 import ab.squirrel.util.Attributes;
 import ab.squirrel.util.BufferUtil;
 import ab.squirrel.util.CharsetStringBuilder;
@@ -36,7 +36,7 @@ import static ab.squirrel.util.UrlEncoded.decodeHexByte;
  * content has been parsed asynchronously from the {@link Content.Source}.</p>
  * <p><a href="https://url.spec.whatwg.org/#application/x-www-form-urlencoded">Specification</a>.</p>
  */
-public class FormFields extends ContentSourceCompletableFuture<Fields>
+public class FormFields extends AbstractContentSource<Fields>
 {
     public static final String MAX_FIELDS_ATTRIBUTE = "ab.squirrel.server.Request.maxFormKeys";
     public static final String MAX_LENGTH_ATTRIBUTE = "ab.squirrel.server.Request.maxFormContentSize";
