@@ -31,9 +31,9 @@ import org.slf4j.LoggerFactory;
 /**
  * <p>A partial {@link EndPoint} implementation based on {@link SelectableChannel}.</p>
  */
-public abstract class SelectableChannelEndPoint extends AbstractEndPoint implements ManagedSelector.Selectable
+public abstract class AbstractChannelEndPoint extends AbstractEndPoint implements ManagedSelector.Selectable
 {
-    private static final Logger LOG = LoggerFactory.getLogger(SelectableChannelEndPoint.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractChannelEndPoint.class);
 
     private final AutoLock _lock = new AutoLock();
     private final SelectableChannel _channel;
@@ -76,7 +76,7 @@ public abstract class SelectableChannelEndPoint extends AbstractEndPoint impleme
         @Override
         public String toString()
         {
-            return String.format("%s:%s:%s->%s", SelectableChannelEndPoint.this, _operation, getInvocationType(), getWriteFlusher());
+            return String.format("%s:%s:%s->%s", AbstractChannelEndPoint.this, _operation, getInvocationType(), getWriteFlusher());
         }
     };
     private final Runnable _runCompleteWriteFillable = new RunnableCloseable("runCompleteWriteFillable")
@@ -106,7 +106,7 @@ public abstract class SelectableChannelEndPoint extends AbstractEndPoint impleme
         }
     };
 
-    public SelectableChannelEndPoint(Scheduler scheduler, SelectableChannel channel, ManagedSelector selector, SelectionKey selectionKey)
+    public AbstractChannelEndPoint(Scheduler scheduler, SelectableChannel channel, ManagedSelector selector, SelectionKey selectionKey)
     {
         super(scheduler);
         _channel = channel;
@@ -314,18 +314,18 @@ public abstract class SelectableChannelEndPoint extends AbstractEndPoint impleme
         {
             try
             {
-                SelectableChannelEndPoint.this.close();
+                AbstractChannelEndPoint.this.close();
             }
             catch (Throwable x)
             {
-                LOG.warn("Unable to close {}", SelectableChannelEndPoint.this, x);
+                LOG.warn("Unable to close {}", AbstractChannelEndPoint.this, x);
             }
         }
 
         @Override
         public String toString()
         {
-            return String.format("%s:%s:%s", SelectableChannelEndPoint.this, _operation, getInvocationType());
+            return String.format("%s:%s:%s", AbstractChannelEndPoint.this, _operation, getInvocationType());
         }
     }
 }

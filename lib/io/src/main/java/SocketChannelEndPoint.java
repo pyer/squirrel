@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 /**
  * <p>An {@link EndPoint} implementation based on {@link SocketChannel}.</p>
  */
-public class SocketChannelEndPoint extends SelectableChannelEndPoint
+public class SocketChannelEndPoint extends AbstractChannelEndPoint
 {
     private static final Logger LOG = LoggerFactory.getLogger(SocketChannelEndPoint.class);
 
