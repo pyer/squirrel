@@ -19,6 +19,7 @@ import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritePendingException;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import ab.squirrel.util.BufferUtil;
@@ -30,13 +31,21 @@ import org.slf4j.LoggerFactory;
 /**
  * <p>Partial implementation of EndPoint that uses {@link FillInterest} and {@link WriteFlusher}.</p>
  */
-public abstract class AbstractEndPoint extends IdleTimeout implements EndPoint
+//public abstract class AbstractEndPoint extends IdleTimeout implements EndPoint
+public abstract class AbstractEndPoint implements EndPoint
 {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEndPoint.class);
 
     private final AtomicReference<State> _state = new AtomicReference<>(State.OPEN);
     private final long _created = System.currentTimeMillis();
     private volatile Connection _connection;
+    private final Scheduler _scheduler;
+
+    private final AtomicReference<Scheduler.Task> _timeout = new AtomicReference<>();
+    private volatile long _idleTimeout = 0;
+    private volatile long _idleNanoTime = System.nanoTime();
+
+
     private final FillInterest _fillInterest = new FillInterest()
     {
         @Override
@@ -56,7 +65,109 @@ public abstract class AbstractEndPoint extends IdleTimeout implements EndPoint
 
     protected AbstractEndPoint(Scheduler scheduler)
     {
-        super(scheduler);
+        _scheduler = scheduler;
+    }
+
+    /**
+     * @return the idle timeout in milliseconds
+     * @see #setIdleTimeout(long)
+     */
+    public long getIdleTimeout()
+    {
+        return _idleTimeout;
+    }
+
+    /**
+     * <p>Sets the idle timeout in milliseconds.</p>
+     * <p>A value that is less than or zero disables the idle timeout checks.</p>
+     *
+     * @param idleTimeout the idle timeout in milliseconds
+     * @see #getIdleTimeout()
+     */
+    public void setIdleTimeout(long idleTimeout)
+    {
+        long old = _idleTimeout;
+        _idleTimeout = idleTimeout;
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("Setting idle timeout {} -> {} on {}", old, idleTimeout, this);
+
+        // Do we have an old timeout
+        if (old > 0) {
+            // if the old was less than or equal to the new timeout, then nothing more to do
+            if (old <= idleTimeout)
+                return;
+            // old timeout is too long, so cancel it.
+            deactivate();
+        }
+        // If we have a new timeout, then check and reschedule
+        if (isOpen())
+            activate();
+    }
+
+    /**
+     * This method should be called when non-idle activity has taken place.
+     */
+    public void notIdle()
+    {
+        _idleNanoTime = System.nanoTime();
+    }
+
+    private void activate()
+    {
+        if (_idleTimeout > 0)
+            idleCheck();
+    }
+
+    private void deactivate()
+    {
+        Scheduler.Task oldTimeout = _timeout.getAndSet(null);
+        if (oldTimeout != null)
+            oldTimeout.cancel();
+    }
+
+    protected long checkIdleTimeout()
+    {
+        if (isOpen())
+        {
+            // milliseconds elapsed between the given begin nanoTime and the current nanoTime
+            long idleElapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - _idleNanoTime);
+            long idleLeft = _idleTimeout - idleElapsed;
+
+            if (LOG.isDebugEnabled())
+                LOG.debug("{} idle timeout check, elapsed: {} ms, remaining: {} ms", this, idleElapsed, idleLeft);
+
+            if (_idleTimeout > 0) {
+                if (idleLeft <= 0) {
+                    TimeoutException timeout = new TimeoutException("Idle timeout expired: " + idleElapsed + "/" + _idleTimeout + " ms");
+                    try {
+                        onIdleExpired(timeout);
+                    }
+                    finally {
+                        notIdle();
+                    }
+                }
+            }
+            return idleLeft >= 0 ? idleLeft : 0;
+        }
+        return -1;
+    }
+
+    private void idleCheck()
+    {
+        long idleLeft = checkIdleTimeout();
+        if (idleLeft >= 0)
+            scheduleIdleTimeout(idleLeft > 0 ? idleLeft : _idleTimeout);
+    }
+
+    private void scheduleIdleTimeout(long delay)
+    {
+        Scheduler.Task newTimeout = null;
+        if (isOpen() && delay > 0 && _scheduler != null)
+            newTimeout = _scheduler.schedule(this::idleCheck, delay, TimeUnit.MILLISECONDS);
+        Scheduler.Task oldTimeout = _timeout.getAndSet(newTimeout);
+        if (oldTimeout != null)
+            oldTimeout.cancel();
     }
 
 /*
@@ -317,22 +428,20 @@ public abstract class AbstractEndPoint extends IdleTimeout implements EndPoint
     @Override
     public void onOpen()
     {
-        if (LOG.isDebugEnabled())
-            LOG.debug("onOpen {}", this);
+        activate();
         if (_state.get() != State.OPEN)
             throw new IllegalStateException();
     }
 
-    @Override
     public final void onClose()
     {
+        deactivate();
         onClose(null);
     }
 
     @Override
     public void onClose(Throwable failure)
     {
-        super.onClose();
         if (failure == null)
         {
             _writeFlusher.onClose();
@@ -385,7 +494,6 @@ public abstract class AbstractEndPoint extends IdleTimeout implements EndPoint
         return _writeFlusher;
     }
 
-    @Override
     protected void onIdleExpired(TimeoutException timeout)
     {
         Connection connection = _connection;
@@ -446,14 +554,12 @@ public abstract class AbstractEndPoint extends IdleTimeout implements EndPoint
 
     public String toEndPointString()
     {
-        return String.format("{l=%s,r=%s,%s,fill=%s,flush=%s,to=%d/%d}",
+        return String.format("{l=%s,r=%s,%s,fill=%s,flush=%s}",
             getLocalSocketAddress(),
             getRemoteSocketAddress(),
             _state.get(),
             _fillInterest.toStateString(),
-            _writeFlusher.toStateString(),
-            getIdleFor(),
-            getIdleTimeout());
+            _writeFlusher.toStateString());
     }
 
     public String toConnectionString()
