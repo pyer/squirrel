@@ -241,8 +241,8 @@ public class ArrayByteBufferPool implements ByteBufferPool
             return buffer.release();
         }
 
-        return ByteBufferPool.super.removeAndRelease(buffer);
-        //return buffer != null && buffer.release();
+        //return ByteBufferPool.super.removeAndRelease(buffer);
+        return (buffer != null && buffer.release());
     }
 
     private void reserve(RetainedBucket bucket, ByteBuffer byteBuffer)
