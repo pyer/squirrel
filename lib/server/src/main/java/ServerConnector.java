@@ -42,39 +42,12 @@ import ab.squirrel.util.annotation.ManagedObject;
 import ab.squirrel.util.annotation.Name;
 import ab.squirrel.util.thread.Scheduler;
 
-/**
- * This {@link Connector} implementation is the primary connector for the
- * Jetty server over TCP/IP.  By the use of various {@link ConnectionFactory} instances it is able
- * to accept connections for HTTP, HTTP/2 and WebSocket, either directly or over SSL.
- * <p>
- * The connector is a fully asynchronous NIO based implementation that by default will
- * use all the commons services (eg {@link Executor}, {@link Scheduler})  of the
- * passed {@link Server} instance, but all services may also be constructor injected
- * into the connector so that it may operate with dedicated or otherwise shared services.
- * </p>
- * <h2>Connection Factories</h2>
- * <p>
- * Various convenience constructors are provided to assist with common configurations of
- * ConnectionFactories, whose generic use is described in {@link AbstractConnector}.
- * If no connection factories are passed, then the connector will
- * default to use a {@link HttpConnectionFactory}.  If an non null {@link SslContextFactory}
- * instance is passed, then this used to instantiate a {@link SslConnectionFactory} which is
- * prepended to the other passed or default factories.
- * </p>
- * <h2>Selectors</h2>
- * <p>
- * The default number of selectors is equal to half of the number of processors available to the JVM,
- * which should allow optimal performance even if all the connections used are performing
- * significant non-blocking work in the callback tasks.
- * </p>
- */
 @ManagedObject("HTTP connector using NIO ByteChannels and Selectors")
 public class ServerConnector extends AbstractNetworkConnector
 {
     private final SelectorManager _manager;
     private final AtomicReference<Closeable> _acceptor = new AtomicReference<>();
     private volatile ServerSocketChannel _acceptChannel;
-    private volatile boolean _inheritChannel = false;
     private volatile int _localPort = -1;
     private volatile int _acceptQueueSize = 0;
     private volatile boolean _reuseAddress = true;
@@ -83,77 +56,14 @@ public class ServerConnector extends AbstractNetworkConnector
     private volatile int _acceptedReceiveBufferSize = -1;
     private volatile int _acceptedSendBufferSize = -1;
 
-    /**
-     * <p>Construct a ServerConnector with a private instance of {@link HttpConnectionFactory} as the only factory.</p>
-     *
-     * @param server The {@link Server} this connector will accept connection for.
-     */
     public ServerConnector(
         @Name("server") Server server)
     {
-        this(server, null, null, null, -1, -1, new HttpConnectionFactory());
-    }
-
-    /**
-     * <p>Construct a ServerConnector with a private instance of {@link HttpConnectionFactory} as the only factory.</p>
-     *
-     * @param server The {@link Server} this connector will accept connection for.
-     * @param acceptors the number of acceptor threads to use, or -1 for a default value. Acceptors accept new TCP/IP connections.  If 0, then
-     * the selector threads are used to accept connections.
-     * @param selectors the number of selector threads, or &lt;=0 for a default value. Selectors notice and schedule established connection that can make IO progress.
-     */
-    public ServerConnector(
-        @Name("server") Server server,
-        @Name("acceptors") int acceptors,
-        @Name("selectors") int selectors)
-    {
-        this(server, null, null, null, acceptors, selectors, new HttpConnectionFactory());
-    }
-
-    /**
-     * <p>Construct a ServerConnector with a private instance of {@link HttpConnectionFactory} as the only factory.</p>
-     *
-     * @param server The {@link Server} this connector will accept connection for.
-     * @param acceptors the number of acceptor threads to use, or -1 for a default value. Acceptors accept new TCP/IP connections.  If 0, then
-     * the selector threads are used to accept connections.
-     * @param selectors the number of selector threads, or &lt;=0 for a default value. Selectors notice and schedule established connection that can make IO progress.
-     * @param factories Zero or more {@link ConnectionFactory} instances used to create and configure connections.
-     */
-    public ServerConnector(
-        @Name("server") Server server,
-        @Name("acceptors") int acceptors,
-        @Name("selectors") int selectors,
-        @Name("factories") ConnectionFactory... factories)
-    {
-        this(server, null, null, null, acceptors, selectors, factories);
-    }
-
-    /**
-     * @param server The server this connector will be accept connection for.
-     * @param executor An executor used to run tasks for handling requests, acceptors and selectors.
-     * If null then use the servers executor
-     * @param scheduler A scheduler used to schedule timeouts. If null then use the servers scheduler
-     * @param bufferPool A ByteBuffer pool used to allocate buffers.  If null then create a private pool with default configuration.
-     * @param acceptors the number of acceptor threads to use, or -1 for a default value. Acceptors accept new TCP/IP connections.  If 0, then
-     * the selector threads are used to accept connections.
-     * @param selectors the number of selector threads, or &lt;=0 for a default value. Selectors notice and schedule established connection that can make IO progress.
-     * @param factories Zero or more {@link ConnectionFactory} instances used to create and configure connections.
-     */
-    public ServerConnector(
-        @Name("server") Server server,
-        @Name("executor") Executor executor,
-        @Name("scheduler") Scheduler scheduler,
-        @Name("bufferPool") ByteBufferPool bufferPool,
-        @Name("acceptors") int acceptors,
-        @Name("selectors") int selectors,
-        @Name("factories") ConnectionFactory... factories)
-    {
-        super(server, executor, scheduler, bufferPool, acceptors, factories);
-        _manager = new ServerConnectorManager(getExecutor(), getScheduler(), selectors);
+        super(server);
+        _manager = new ServerConnectorManager(getExecutor(), getScheduler());
         installBean(_manager, true);
         setAcceptorPriorityDelta(-2);
     }
-
 
     @Override
     protected void doStart() throws Exception
@@ -187,32 +97,6 @@ public class ServerConnector extends AbstractNetworkConnector
     {
         ServerSocketChannel channel = _acceptChannel;
         return channel != null && channel.isOpen();
-    }
-
-    /**
-     * @return whether this connector uses a channel inherited from the JVM.
-     * @see System#inheritedChannel()
-     */
-    public boolean isInheritChannel()
-    {
-        return _inheritChannel;
-    }
-
-    /**
-     * <p>Sets whether this connector uses a channel inherited from the JVM.</p>
-     * <p>If true, the connector first tries to inherit from a channel provided by the system.
-     * If there is no inherited channel available, or if the inherited channel is not usable,
-     * then it will fall back using {@link ServerSocketChannel}.</p>
-     * <p>Use it with xinetd/inetd, to launch an instance of Jetty on demand. The port
-     * used to access pages on the Jetty instance is the same as the port used to
-     * launch Jetty.</p>
-     *
-     * @param inheritChannel whether this connector uses a channel inherited from the JVM.
-     * @see ServerConnector#openAcceptChannel()
-     */
-    public void setInheritChannel(boolean inheritChannel)
-    {
-        _inheritChannel = inheritChannel;
     }
 
     /**
@@ -253,46 +137,18 @@ public class ServerConnector extends AbstractNetworkConnector
     protected ServerSocketChannel openAcceptChannel() throws IOException
     {
         ServerSocketChannel serverChannel = null;
-        if (isInheritChannel())
-        {
-            Channel channel = System.inheritedChannel();
-            if (channel instanceof ServerSocketChannel)
-                serverChannel = (ServerSocketChannel)channel;
-            else
-                LOG.warn("Unable to use System.inheritedChannel() [{}]. Trying a new ServerSocketChannel at {}:{}", channel, getHost(), getPort());
-        }
-
-        if (serverChannel == null)
-        {
-            InetSocketAddress bindAddress = getHost() == null ? new InetSocketAddress(getPort()) : new InetSocketAddress(getHost(), getPort());
-            serverChannel = ServerSocketChannel.open();
-            setSocketOption(serverChannel, StandardSocketOptions.SO_REUSEADDR, getReuseAddress());
-            setSocketOption(serverChannel, StandardSocketOptions.SO_REUSEPORT, isReusePort());
-            try
-            {
+        InetSocketAddress bindAddress = getHost() == null ? new InetSocketAddress(getPort()) : new InetSocketAddress(getHost(), getPort());
+        serverChannel = ServerSocketChannel.open();
+        try {
+                serverChannel.setOption(StandardSocketOptions.SO_REUSEADDR, getReuseAddress());
+                serverChannel.setOption(StandardSocketOptions.SO_REUSEPORT, isReusePort());
                 serverChannel.bind(bindAddress, getAcceptQueueSize());
-            }
-            catch (Throwable e)
-            {
+        }
+        catch (Throwable e) {
                 IO.close(serverChannel);
                 throw new IOException("Failed to bind to " + bindAddress, e);
-            }
         }
-
         return serverChannel;
-    }
-
-    private <T> void setSocketOption(ServerSocketChannel channel, SocketOption<T> option, T value)
-    {
-        try
-        {
-            channel.setOption(option, value);
-        }
-        catch (Throwable x)
-        {
-            if (LOG.isDebugEnabled())
-                LOG.debug("Could not configure {} to {} on {}", option, value, channel, x);
-        }
     }
 
     @Override
@@ -502,9 +358,9 @@ public class ServerConnector extends AbstractNetworkConnector
 
     protected class ServerConnectorManager extends SelectorManager
     {
-        public ServerConnectorManager(Executor executor, Scheduler scheduler, int selectors)
+        public ServerConnectorManager(Executor executor, Scheduler scheduler)
         {
-            super(executor, scheduler, selectors);
+            super(executor, scheduler);
         }
 
         @Override

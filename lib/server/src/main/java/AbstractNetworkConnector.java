@@ -34,9 +34,16 @@ public abstract class AbstractNetworkConnector extends AbstractConnector impleme
     private volatile String _host;
     private volatile int _port = 0;
 
+/*
     public AbstractNetworkConnector(Server server, Executor executor, Scheduler scheduler, ByteBufferPool bufferPool, int acceptors, ConnectionFactory... factories)
     {
         super(server, executor, scheduler, bufferPool, acceptors, factories);
+    }
+*/
+
+    public AbstractNetworkConnector(Server server)
+    {
+        super(server, null, null, null, -1, new HttpConnectionFactory());
     }
 
     public void setHost(String host)
