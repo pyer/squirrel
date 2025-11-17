@@ -22,15 +22,21 @@ import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
+
+import ab.squirrel.util.thread.Invocable;
 import ab.squirrel.http.HttpException;
 import ab.squirrel.http.HttpField;
 import ab.squirrel.http.HttpFields;
@@ -48,7 +54,6 @@ import ab.squirrel.server.Response;
 import ab.squirrel.server.Server;
 import ab.squirrel.util.Attributes;
 import ab.squirrel.util.Callback;
-import ab.squirrel.util.ExceptionUtil;
 import ab.squirrel.util.StringUtil;
 import ab.squirrel.util.annotation.ManagedAttribute;
 import ab.squirrel.util.annotation.ManagedObject;
@@ -264,7 +269,7 @@ public class ErrorHandler implements Request.Handler
         catch (Throwable x)
         {
             if (buffer != null)
-                byteBufferPool.removeAndRelease(buffer);
+                buffer.release();
             throw x;
         }
     }
@@ -567,14 +572,14 @@ public class ErrorHandler implements Request.Handler
     private static class WriteErrorCallback implements Callback
     {
         private final AtomicReference<Callback>  _callback;
-        private final ByteBufferPool _pool;
-        private final RetainableByteBuffer _buffer;
+        private final ByteBufferPool _bufferPool;
+        private final RetainableByteBuffer _retainableBuffer;
 
         public WriteErrorCallback(Callback callback, ByteBufferPool pool, RetainableByteBuffer retainable)
         {
             _callback = new AtomicReference<>(callback);
-            _pool = pool;
-            _buffer = retainable;
+            _bufferPool = pool;
+            _retainableBuffer = retainable;
         }
 
         @Override
@@ -582,15 +587,104 @@ public class ErrorHandler implements Request.Handler
         {
             Callback callback = _callback.getAndSet(null);
             if (callback != null)
-                ExceptionUtil.callAndThen(_buffer::release, callback::succeeded);
+                callAndThen(_retainableBuffer::release, callback::succeeded);
         }
+
+    /** Check if two {@link Throwable}s are associated.
+     * @param t1 A Throwable or null
+     * @param t2 Another Throwable or null
+     * @return true iff the exceptions are not associated by being the same instance, sharing a cause or one suppressing the other.
+     */
+    private boolean areNotAssociated(Throwable t1, Throwable t2)
+    {
+        if (t1 == null || t2 == null)
+            return false;
+        while (t1 != null)
+        {
+            Throwable two = t2;
+            while (two != null)
+            {
+                if (t1 == two)
+                    return false;
+                if (t1.getCause() == two)
+                    return false;
+                if (Arrays.asList(t1.getSuppressed()).contains(two))
+                    return false;
+                if (Arrays.asList(two.getSuppressed()).contains(t1))
+                    return false;
+
+                two = two.getCause();
+            }
+            t1 = t1.getCause();
+        }
+
+        return true;
+    }
+
+    /**
+     * Call a handler of {@link Throwable} and then always call another, suppressing any exceptions thrown.
+     * @param cause The {@link Throwable} to be passed to both consumers.
+     * @param call The first {@link Consumer} of {@link Throwable} to call.
+     * @param then The second {@link Consumer} of {@link Throwable} to call.
+     */
+    private void callAndThen(Throwable cause, Consumer<Throwable> call, Consumer<Throwable> then)
+    {
+        try {
+            call.accept(cause);
+        }
+        catch (Throwable t) {
+            if (areNotAssociated(cause, t))
+                cause.addSuppressed(t);
+        }
+        finally {
+            then.accept(cause);
+        }
+    }
+
+    /**
+     * Call a handler of {@link Throwable} and then always call a {@link Runnable}, suppressing any exceptions thrown.
+     * @param cause The {@link Throwable} to be passed to both consumers.
+     * @param call The {@link Consumer} of {@link Throwable} to call.
+     * @param then The {@link Runnable} to call.
+     */
+    private void callAndThen(Throwable cause, Consumer<Throwable> call, Runnable then)
+    {
+        try {
+            call.accept(cause);
+        }
+        catch (Throwable t) {
+            if (areNotAssociated(cause, t))
+                cause.addSuppressed(t);
+        }
+        finally {
+            then.run();
+        }
+    }
+
+    /**
+     * Call a {@link Runnable} and then always call another, ignoring any exceptions thrown.
+     * @param call The first {@link Runnable} to call.
+     * @param then The second {@link Runnable} to call.
+     */
+    private void callAndThen(Runnable call, Runnable then)
+    {
+        try {
+            call.run();
+        }
+        catch (Throwable t) {
+            // ignored
+        }
+        finally {
+            then.run();
+        }
+    }
 
         @Override
         public void failed(Throwable x)
         {
             Callback callback = _callback.getAndSet(null);
             if (callback != null)
-                ExceptionUtil.callAndThen(x, t -> _pool.removeAndRelease(_buffer), callback::failed);
+                callAndThen(x, t -> _bufferPool.removeAndRelease(_retainableBuffer), callback::failed);
         }
     }
 }
