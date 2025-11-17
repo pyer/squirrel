@@ -761,7 +761,6 @@ public class ManagedSelector extends ContainerLifeCycle
         public void close() throws IOException
         {
             // May be called from any thread.
-            // Implements AbstractConnector.setAccepting(boolean).
             submit(selector -> _key.cancel());
         }
     }
@@ -776,7 +775,6 @@ public class ManagedSelector extends ContainerLifeCycle
         {
             this.channel = channel;
             this.attachment = attachment;
-            _selectorManager.onAccepting(channel);
         }
 
         @Override
@@ -798,7 +796,7 @@ public class ManagedSelector extends ContainerLifeCycle
             catch (Throwable x)
             {
                 IO.close(channel);
-                _selectorManager.onAcceptFailed(channel, x);
+                //_selectorManager.onAcceptFailed(channel, x);
                 if (LOG.isDebugEnabled())
                     LOG.debug("Could not register channel after accept {}", channel, x);
             }
@@ -810,7 +808,7 @@ public class ManagedSelector extends ContainerLifeCycle
             try
             {
                 createEndPoint(channel, key);
-                _selectorManager.onAccepted(channel);
+                //_selectorManager.onAccepted(channel);
             }
             catch (Throwable x)
             {
@@ -825,7 +823,7 @@ public class ManagedSelector extends ContainerLifeCycle
                 LOG.warn("Could not accept {}", channel, failure);
             else
                 LOG.warn("Could not accept {}: {}", channel, String.valueOf(failure));
-            _selectorManager.onAcceptFailed(channel, failure);
+            //_selectorManager.onAcceptFailed(channel, failure);
         }
 
         @Override

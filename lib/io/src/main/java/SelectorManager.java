@@ -58,7 +58,7 @@ public abstract class SelectorManager extends ContainerLifeCycle
     private final ManagedSelector[] _selectors;
     private final AtomicInteger _selectorIndex = new AtomicInteger();
     private final IntUnaryOperator _selectorIndexUpdate;
-    private final List<AcceptListener> _acceptListeners = new CopyOnWriteArrayList<>();
+    private final List<EventListener> _acceptListeners = new CopyOnWriteArrayList<>();
     private long _connectTimeout = DEFAULT_CONNECT_TIMEOUT;
     private ThreadPoolBudget.Lease _lease;
 
@@ -406,16 +406,13 @@ public abstract class SelectorManager extends ContainerLifeCycle
 
     /**
      * @param listener An EventListener
-     * @see AcceptListener
      * @see Container#addEventListener(EventListener)
      */
     @Override
     public boolean addEventListener(EventListener listener)
     {
-        if (super.addEventListener(listener))
-        {
-            if (listener instanceof AcceptListener)
-                _acceptListeners.add((AcceptListener)listener);
+        if (super.addEventListener(listener)) {
+            _acceptListeners.add(listener);
             return true;
         }
         return false;
@@ -424,25 +421,20 @@ public abstract class SelectorManager extends ContainerLifeCycle
     @Override
     public boolean removeEventListener(EventListener listener)
     {
-        if (super.removeEventListener(listener))
-        {
-            if (listener instanceof AcceptListener)
-                _acceptListeners.remove(listener);
+        if (super.removeEventListener(listener)) {
+            _acceptListeners.remove(listener);
             return true;
         }
         return false;
     }
-
+/*
     protected void onAccepting(SelectableChannel channel)
     {
-        for (AcceptListener l : _acceptListeners)
-        {
-            try
-            {
+        for (EventListener l : _acceptListeners) {
+            try {
                 l.onAccepting(channel);
             }
-            catch (Throwable x)
-            {
+            catch (Throwable x) {
                 LOG.warn("Failed to notify onAccepting on listener {}", l, x);
             }
         }
@@ -450,14 +442,11 @@ public abstract class SelectorManager extends ContainerLifeCycle
 
     protected void onAcceptFailed(SelectableChannel channel, Throwable cause)
     {
-        for (AcceptListener l : _acceptListeners)
-        {
-            try
-            {
+        for (EventListener l : _acceptListeners) {
+            try {
                 l.onAcceptFailed(channel, cause);
             }
-            catch (Throwable x)
-            {
+            catch (Throwable x) {
                 LOG.warn("Failed to notify onAcceptFailed on listener {}", l, x);
             }
         }
@@ -465,63 +454,16 @@ public abstract class SelectorManager extends ContainerLifeCycle
 
     protected void onAccepted(SelectableChannel channel)
     {
-        for (AcceptListener l : _acceptListeners)
-        {
-            try
-            {
+        for (EventListener l : _acceptListeners) {
+            try {
                 l.onAccepted(channel);
             }
-            catch (Throwable x)
-            {
+            catch (Throwable x) {
                 LOG.warn("Failed to notify onAccepted on listener {}", l, x);
             }
         }
     }
-
-    public interface SelectorManagerListener extends EventListener
-    {
-    }
-
-    /**
-     * <p>A listener for accept events.</p>
-     * <p>This listener is called from either the selector or acceptor thread
-     * and implementations must be non blocking and fast.</p>
-     */
-    public interface AcceptListener extends SelectorManagerListener
-    {
-        /**
-         * Called immediately after a new SelectableChannel is accepted, but
-         * before it has been submitted to the {@link SelectorManager}.
-         *
-         * @param channel the accepted channel
-         */
-        default void onAccepting(SelectableChannel channel)
-        {
-        }
-
-        /**
-         * Called if the processing of the accepted channel fails prior to calling
-         * {@link #onAccepted(SelectableChannel)}.
-         *
-         * @param channel the accepted channel
-         * @param cause the cause of the failure
-         */
-        default void onAcceptFailed(SelectableChannel channel, Throwable cause)
-        {
-        }
-
-        /**
-         * Called after the accepted channel has been allocated an {@link EndPoint}
-         * and associated {@link Connection}, and after the onOpen notifications have
-         * been called on both endPoint and connection.
-         *
-         * @param channel the accepted channel
-         */
-        default void onAccepted(SelectableChannel channel)
-        {
-        }
-    }
-
+*/
     @Override
     public String toString()
     {

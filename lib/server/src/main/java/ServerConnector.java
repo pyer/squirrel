@@ -159,14 +159,11 @@ public class ServerConnector extends AbstractNetworkConnector
     protected void doStart() throws Exception
     {
         addBean(_acceptChannel);
-
-        for (EventListener l : getBeans(SelectorManager.SelectorManagerListener.class))
+        for (EventListener l : getBeans(EventListener.class))
             _manager.addEventListener(l);
 
         super.doStart();
-
-        if (getAcceptors() == 0)
-        {
+        if (getAcceptors() == 0) {
             _acceptChannel.configureBlocking(false);
             _acceptor.set(_manager.acceptor(_acceptChannel));
         }
@@ -178,12 +175,9 @@ public class ServerConnector extends AbstractNetworkConnector
         _acceptor.set(null);
 
         super.doStop();
-
         removeBean(_acceptChannel);
         _acceptChannel = null;
-
-        for (EventListener l : getBeans(EventListener.class))
-        {
+        for (EventListener l : getBeans(EventListener.class)) {
             _manager.removeEventListener(l);
         }
     }
@@ -305,10 +299,6 @@ public class ServerConnector extends AbstractNetworkConnector
     public void close()
     {
         super.close();
-
-        // When acceptors == 0, we want the ServerSocketChannel
-        // to be closed by the SelectorManager when the
-        // SelectorManager is stopped (as a bean) in doStop().
         if (getAcceptors() > 0)
             IO.close(_acceptChannel);
 
@@ -319,8 +309,7 @@ public class ServerConnector extends AbstractNetworkConnector
     public void accept(int acceptorID) throws IOException
     {
         ServerSocketChannel serverChannel = _acceptChannel;
-        if (serverChannel != null && serverChannel.isOpen())
-        {
+        if (serverChannel != null && serverChannel.isOpen()) {
             SocketChannel channel = serverChannel.accept();
             accepted(channel);
         }
@@ -348,12 +337,6 @@ public class ServerConnector extends AbstractNetworkConnector
         {
             LOG.trace("IGNORED", e);
         }
-    }
-
-    @ManagedAttribute("The Selector Manager")
-    public SelectorManager getSelectorManager()
-    {
-        return _manager;
     }
 
     @Override

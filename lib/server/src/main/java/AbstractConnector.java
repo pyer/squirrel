@@ -32,7 +32,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.stream.Collectors;
 
 import ab.squirrel.http.ComplianceViolation;
-import ab.squirrel.io.ArrayByteBufferPool;
 import ab.squirrel.io.ByteBufferPool;
 import ab.squirrel.io.EndPoint;
 import ab.squirrel.io.RetainableByteBuffer;
@@ -63,8 +62,7 @@ import org.slf4j.LoggerFactory;
  * {@link ScheduledExecutorScheduler} instance.
  * </li>
  * <li>The {@link ByteBufferPool} service is made available to all connections to be used to acquire and release
- * {@link RetainableByteBuffer} instances from a pool.  The default is to use a new {@link ArrayByteBufferPool}
- * instance.
+ * {@link RetainableByteBuffer} instances from a pool.
  * </li>
  * </ul>
  * These services are managed as aggregate beans by the {@link ContainerLifeCycle} super class and

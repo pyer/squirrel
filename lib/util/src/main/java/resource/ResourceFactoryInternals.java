@@ -147,10 +147,6 @@ class ResourceFactoryInternals
             _compositeResourceFactory.clearMounts();
         }
 
-        public int getTrackingCount()
-        {
-            return _compositeResourceFactory.getMounts().size();
-        }
     }
 
     static class LifeCycle extends AbstractLifeCycle implements ResourceFactory.LifeCycle
