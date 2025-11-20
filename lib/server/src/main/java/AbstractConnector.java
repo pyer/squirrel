@@ -35,7 +35,6 @@ import ab.squirrel.http.ComplianceViolation;
 import ab.squirrel.io.ByteBufferPool;
 import ab.squirrel.io.EndPoint;
 import ab.squirrel.io.RetainableByteBuffer;
-import ab.squirrel.server.internal.HttpConnection;
 import ab.squirrel.util.StringUtil;
 import ab.squirrel.util.annotation.ManagedAttribute;
 import ab.squirrel.util.annotation.ManagedObject;

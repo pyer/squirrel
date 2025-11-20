@@ -44,11 +44,6 @@ public interface ConnectionMetaData extends Attributes
 
     boolean isPersistent();
 
-    default boolean isSecure()
-    {
-        return false;
-    }
-
     /**
      * @return whether the functionality of pushing resources is supported
      */
@@ -142,12 +137,6 @@ public interface ConnectionMetaData extends Attributes
         public boolean isPersistent()
         {
             return getWrapped().isPersistent();
-        }
-
-        @Override
-        public boolean isSecure()
-        {
-            return getWrapped().isSecure();
         }
 
         @Override

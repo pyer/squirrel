@@ -35,7 +35,7 @@ import ab.squirrel.http.HttpField;
 import ab.squirrel.http.HttpFields;
 import ab.squirrel.http.HttpHeader;
 import ab.squirrel.http.HttpMethod;
-import ab.squirrel.http.HttpScheme;
+//import ab.squirrel.http.HttpScheme;
 import ab.squirrel.http.HttpStatus;
 import ab.squirrel.http.HttpURI;
 import ab.squirrel.http.HttpVersion;
@@ -860,12 +860,6 @@ public class HttpChannelState implements HttpChannel, Components
         public long getHeadersNanoTime()
         {
             return _headersNanoTime;
-        }
-
-        @Override
-        public boolean isSecure()
-        {
-            return HttpScheme.HTTPS.is(getHttpURI().getScheme());
         }
 
         @Override

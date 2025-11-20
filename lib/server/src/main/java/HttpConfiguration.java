@@ -26,7 +26,6 @@ import ab.squirrel.http.CookieCompliance;
 import ab.squirrel.http.HttpCompliance;
 import ab.squirrel.http.HttpFields;
 import ab.squirrel.http.HttpMethod;
-import ab.squirrel.http.HttpScheme;
 import ab.squirrel.http.MultiPartCompliance;
 import ab.squirrel.http.UriCompliance;
 import ab.squirrel.util.HostPort;
@@ -49,7 +48,6 @@ import ab.squirrel.util.annotation.ManagedObject;
 public class HttpConfiguration
 {
     public static final String SERVER_VERSION = "Squirrel 2.0";
-    private final List<Customizer> _customizers = new CopyOnWriteArrayList<>();
     private final Index.Mutable<Boolean> _formEncodedMethods = new Index.Builder<Boolean>()
         .caseSensitive(false)
         .mutable()
@@ -61,9 +59,7 @@ public class HttpConfiguration
     private int _responseHeaderSize = 8 * 1024;
     private int _headerCacheSize = 1024;
     private boolean _headerCacheCaseSensitive = false;
-    private int _securePort;
     private long _idleTimeout = -1;
-    private String _secureScheme = HttpScheme.HTTPS.asString();
     private boolean _sendServerVersion = true;
     private boolean _sendXPoweredBy = false;
     private boolean _sendDateHeader = true;
@@ -85,27 +81,6 @@ public class HttpConfiguration
     private SocketAddress _localAddress;
     private int _maxUnconsumedRequestContentReads = 16;
 
-    /**
-     * <p>An interface that allows a request object to be customized
-     * for a particular HTTP connector configuration.  Unlike Filters, customizer are
-     * applied before the request is submitted for processing and can be specific to the
-     * connector on which the request was received.</p>
-     *
-     * <p>Typically Customizers perform tasks such as:</p>
-     * <ul>
-     * <li>process header fields that may be injected by a proxy or load balancer.
-     * <li>setup attributes that may come from the connection/connector such as SSL Session IDs
-     * <li>Allow a request to be marked as secure or authenticated if those have been offloaded
-     * and communicated by header, cookie or other out-of-band mechanism
-     * <li>Set request attributes/fields that are determined by the connector on which the
-     * request was received
-     * </ul>
-     */
-    public interface Customizer
-    {
-        Request customize(Request request, HttpFields.Mutable responseHeaders);
-    }
-
     public interface ConnectionFactory
     {
         HttpConfiguration getHttpConfiguration();
@@ -124,7 +99,6 @@ public class HttpConfiguration
      */
     public HttpConfiguration(HttpConfiguration config)
     {
-        _customizers.addAll(config._customizers);
         for (String s : config._formEncodedMethods.keySet())
         {
             _formEncodedMethods.put(s, Boolean.TRUE);
@@ -135,8 +109,6 @@ public class HttpConfiguration
         _responseHeaderSize = config._responseHeaderSize;
         _headerCacheSize = config._headerCacheSize;
         _headerCacheCaseSensitive = config._headerCacheCaseSensitive;
-        _secureScheme = config._secureScheme;
-        _securePort = config._securePort;
         _idleTimeout = config._idleTimeout;
         _sendDateHeader = config._sendDateHeader;
         _sendServerVersion = config._sendServerVersion;
@@ -158,39 +130,6 @@ public class HttpConfiguration
         _uriCompliance = config._uriCompliance;
         _serverAuthority = config._serverAuthority;
         _localAddress = config._localAddress;
-    }
-
-    /**
-     * <p>Adds a {@link Customizer} that is invoked for every
-     * request received.</p>
-     * <p>Customizers are often used to interpret optional headers (eg {@link ForwardedRequestCustomizer}) or
-     * optional protocol semantics (eg {@link SecureRequestCustomizer}).
-     *
-     * @param customizer A request customizer
-     */
-    public void addCustomizer(Customizer customizer)
-    {
-        _customizers.add(customizer);
-    }
-
-    public List<Customizer> getCustomizers()
-    {
-        return _customizers;
-    }
-
-    public <T> T getCustomizer(Class<T> type)
-    {
-        for (Customizer c : _customizers)
-        {
-            if (type.isAssignableFrom(c.getClass()))
-                return (T)c;
-        }
-        return null;
-    }
-
-    public boolean removeCustomizer(Customizer customizer)
-    {
-        return _customizers.remove(customizer);
     }
 
     @ManagedAttribute("The size in bytes of the output buffer used to aggregate HTTP output")
@@ -227,18 +166,6 @@ public class HttpConfiguration
     public boolean isHeaderCacheCaseSensitive()
     {
         return _headerCacheCaseSensitive;
-    }
-
-    @ManagedAttribute("The port to which Integral or Confidential security constraints are redirected")
-    public int getSecurePort()
-    {
-        return _securePort;
-    }
-
-    @ManagedAttribute("The scheme with which Integral or Confidential security constraints are redirected")
-    public String getSecureScheme()
-    {
-        return _secureScheme;
     }
 
     @ManagedAttribute("Whether persistent connections are enabled")
@@ -382,20 +309,6 @@ public class HttpConfiguration
     }
 
     /**
-     * <p>Sets the {@link Customizer}s that are invoked for every
-     * request received.</p>
-     * <p>Customizers are often used to interpret optional headers (eg {@link ForwardedRequestCustomizer}) or
-     * optional protocol semantics (eg {@link SecureRequestCustomizer}).</p>
-     *
-     * @param customizers the list of customizers
-     */
-    public void setCustomizers(List<Customizer> customizers)
-    {
-        _customizers.clear();
-        _customizers.addAll(customizers);
-    }
-
-    /**
      * Set the size of the buffer into which response content is aggregated
      * before being sent to the client.  A larger buffer can improve performance by allowing
      * a content producer to run without blocking, however larger buffers consume more memory and
@@ -457,26 +370,6 @@ public class HttpConfiguration
     public void setHeaderCacheCaseSensitive(boolean headerCacheCaseSensitive)
     {
         this._headerCacheCaseSensitive = headerCacheCaseSensitive;
-    }
-
-    /**
-     * <p>Sets the TCP/IP port used for CONFIDENTIAL and INTEGRAL redirections.</p>
-     *
-     * @param securePort the secure port to redirect to.
-     */
-    public void setSecurePort(int securePort)
-    {
-        _securePort = securePort;
-    }
-
-    /**
-     * <p>Set the  URI scheme used for CONFIDENTIAL and INTEGRAL redirections.</p>
-     *
-     * @param secureScheme A scheme string like "https"
-     */
-    public void setSecureScheme(String secureScheme)
-    {
-        _secureScheme = URIUtil.normalizeScheme(secureScheme);
     }
 
     /**

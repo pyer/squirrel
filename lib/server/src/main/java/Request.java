@@ -39,7 +39,7 @@ import ab.squirrel.http.ComplianceViolation;
 import ab.squirrel.http.HttpCookie;
 import ab.squirrel.http.HttpFields;
 import ab.squirrel.http.HttpHeader;
-import ab.squirrel.http.HttpScheme;
+//import ab.squirrel.http.HttpScheme;
 import ab.squirrel.http.HttpURI;
 import ab.squirrel.http.MetaData;
 import ab.squirrel.http.MimeTypes;
@@ -248,9 +248,6 @@ public interface Request extends Attributes, Content.Source
      * @return The nanoTime at which the request was ready in nanoseconds
      */
     long getHeadersNanoTime();
-
-    // TODO: see above.
-    boolean isSecure();
 
     /**
      * {@inheritDoc}
@@ -754,12 +751,6 @@ public interface Request extends Attributes, Content.Source
         public long getHeadersNanoTime()
         {
             return getWrapped().getHeadersNanoTime();
-        }
-
-        @Override
-        public boolean isSecure()
-        {
-            return getWrapped().isSecure();
         }
 
         @Override

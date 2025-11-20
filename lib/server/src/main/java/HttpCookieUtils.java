@@ -46,7 +46,6 @@ public final class HttpCookieUtils
         .with(HttpCookie.MAX_AGE_ATTRIBUTE)
         .with(HttpCookie.PATH_ATTRIBUTE)
         .with(HttpCookie.SAME_SITE_ATTRIBUTE)
-        .with(HttpCookie.SECURE_ATTRIBUTE)
         .with(HttpCookie.PARTITIONED_ATTRIBUTE)
         .build();
     // RFC 1123 format of epoch for the Expires attribute.
@@ -183,9 +182,6 @@ public final class HttpCookieUtils
             builder.append(maxAge);
         }
 
-        if (httpCookie.isSecure())
-            builder.append(";Secure");
-
         if (httpCookie.isHttpOnly())
             builder.append(";HttpOnly");
 
@@ -258,8 +254,6 @@ public final class HttpCookieUtils
         }
 
         // add the other fields
-        if (httpCookie.isSecure())
-            builder.append("; Secure");
         if (httpCookie.isHttpOnly())
             builder.append("; HttpOnly");
         if (httpCookie.isPartitioned())
