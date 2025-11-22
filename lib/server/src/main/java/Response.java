@@ -19,6 +19,9 @@ import java.util.ListIterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 
 import ab.squirrel.http.ComplianceViolationException;
 import ab.squirrel.http.CookieCompliance;
@@ -564,7 +567,9 @@ public interface Response extends Content.Sink
             return;
         }
 
-        ResponseUtils.ensureConsumeAvailableOrNotPersistent(request, response);
+        if (!request.consumeAvailable()) {
+            ensureNotPersistent(request, response);
+        }
 
         if (status <= 0)
             status = HttpStatus.INTERNAL_SERVER_ERROR_500;
@@ -594,6 +599,54 @@ public interface Response extends Content.Sink
         // fall back to very empty error page
         response.getHeaders().put(ErrorHandler.ERROR_CACHE_CONTROL);
         response.write(true, null, callback);
+    }
+
+    private static void ensureNotPersistent(Request request, Response response)
+    {
+        switch (request.getConnectionMetaData().getHttpVersion()) {
+            case HTTP_1_0 ->
+                // Remove any keep-alive value in Connection headers
+                response.getHeaders().computeField(HttpHeader.CONNECTION, (h, fields) ->
+                {
+                    if (fields == null || fields.isEmpty())
+                        return null;
+                    String v = fields.stream()
+                        .flatMap(field -> Stream.of(field.getValues()).filter(s -> !HttpHeaderValue.KEEP_ALIVE.is(s)))
+                        .collect(Collectors.joining(", "));
+                    if (StringUtil.isEmpty(v))
+                        return null;
+
+                    return new HttpField(HttpHeader.CONNECTION, v);
+                });
+
+            case HTTP_1_1 ->
+                // Add close value to Connection headers
+                response.getHeaders().computeField(HttpHeader.CONNECTION, (h, fields) ->
+                {
+                    if (fields == null || fields.isEmpty())
+                        return HttpFields.CONNECTION_CLOSE;
+
+                    if (fields.stream().anyMatch(f -> f.contains(HttpHeaderValue.CLOSE.asString())))
+                    {
+                        if (fields.size() == 1)
+                        {
+                            HttpField f = fields.get(0);
+                            if (HttpFields.CONNECTION_CLOSE.equals(f))
+                                return f;
+                        }
+
+                        return new HttpField(HttpHeader.CONNECTION, fields.stream()
+                            .flatMap(field -> Stream.of(field.getValues()).filter(s -> !HttpHeaderValue.KEEP_ALIVE.is(s)))
+                            .collect(Collectors.joining(", ")));
+                    }
+
+                    return new HttpField(HttpHeader.CONNECTION,
+                        Stream.concat(fields.stream()
+                                    .flatMap(field -> Stream.of(field.getValues()).filter(s -> !HttpHeaderValue.KEEP_ALIVE.is(s))),
+                                Stream.of(HttpHeaderValue.CLOSE.asString()))
+                            .collect(Collectors.joining(", ")));
+                });
+        }
     }
 
     /**
