@@ -13,7 +13,11 @@
 
 package ab.squirrel.server;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import java.util.Collection;
+import java.util.EventListener;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -32,7 +36,7 @@ import ab.squirrel.util.thread.Scheduler;
  * the machinery needed to handle such tasks.</p>
  */
 @ManagedObject("Connector Interface")
-public interface Connector extends LifeCycle, Container, Graceful
+public interface Connector extends LifeCycle, Container, Closeable, Graceful
 {
     /**
      * Get the {@link Server} instance associated with this {@link Connector}.
@@ -57,6 +61,43 @@ public interface Connector extends LifeCycle, Container, Graceful
      * @return the {@link ByteBufferPool} to acquire buffers from and release buffers to
      */
     public ByteBufferPool getByteBufferPool();
+
+    /**
+     * @return The hostname representing the interface to which
+     * this connector will bind, or null for all interfaces.
+     */
+    String getHost();
+
+    /**
+     * @return The configured port for the connector or 0 if any available
+     * port may be used.
+     */
+    int getPort();
+
+    /**
+     * @return The actual port the connector is listening on, or
+     * -1 if it has not been opened, or -2 if it has been closed.
+     */
+    int getLocalPort();
+
+    /**
+     * <p>Performs the activities needed to open the network communication
+     * (for example, to start accepting incoming network connections).</p>
+     * <p>Implementation must be idempotent.</p>
+     *
+     * @throws IOException if this connector cannot be opened
+     * @see #close()
+     */
+    void open() throws IOException;
+
+    /**
+     * <p>Performs the activities needed to close the network communication
+     * (for example, to stop accepting network connections).</p>
+     * <p>Once a connector has been closed, it cannot be opened again without first
+     * calling {@link #stop()} and it will not be active again until a subsequent call to {@link #start()}.</p>
+     * <p>Implementation must be idempotent.</p>
+     */
+    void close();
 
     /**
      * @param nextProtocol the next protocol
@@ -96,4 +137,29 @@ public interface Connector extends LifeCycle, Container, Graceful
      * @return The connector name or null.
      */
     public String getName();
+
+    /**
+     * <p>Receives notifications of the {@link Connector#open()}
+     * and {@link Connector#close()} events.</p>
+     */
+    interface Listener extends EventListener
+    {
+        /**
+         * <p>Invoked when the given {@link Connector} has been opened.</p>
+         *
+         * @param connector the {@link Connector} that has been opened
+         */
+        default void onOpen(Connector connector)
+        {
+        }
+
+        /**
+         * <p>Invoked when the given {@link Connector} has been closed.</p>
+         *
+         * @param connector the {@link Connector} that has been closed
+         */
+        default void onClose(Connector connector)
+        {
+        }
+    }
 }

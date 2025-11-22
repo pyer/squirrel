@@ -43,7 +43,7 @@ import ab.squirrel.util.annotation.Name;
 import ab.squirrel.util.thread.Scheduler;
 
 @ManagedObject("HTTP connector using NIO ByteChannels and Selectors")
-public class ServerConnector extends AbstractNetworkConnector
+public class ServerConnector extends AbstractConnector
 {
     private final SelectorManager _manager;
     private final AtomicReference<Closeable> _acceptor = new AtomicReference<>();
@@ -92,13 +92,14 @@ public class ServerConnector extends AbstractNetworkConnector
         }
     }
 
+/*
     @Override
     public boolean isOpen()
     {
         ServerSocketChannel channel = _acceptChannel;
         return channel != null && channel.isOpen();
     }
-
+*/
     /**
      * Open the connector using the passed ServerSocketChannel.
      * This open method can be called before starting the connector to pass it a ServerSocketChannel

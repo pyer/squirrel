@@ -19,6 +19,7 @@ import java.nio.channels.ClosedByInterruptException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EventListener;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -47,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ManagedObject("Abstract implementation of the Connector Interface")
+//public abstract class AbstractNetworkConnector extends AbstractConnector implements NetworkConnector
 public abstract class AbstractConnector extends ContainerLifeCycle implements Connector
 {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractConnector.class);
@@ -73,6 +75,9 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
     private boolean _accepting = true;
     private ThreadPoolBudget.Lease _lease;
 
+    private volatile String _host;
+    private volatile int _port = 0;
+
     /**
      * @param server The {@link Server} this connector will be added to, must not be null
      * @param executor An {@link Executor} for this connector or null to use the Server's Executor
@@ -81,17 +86,21 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
      * @param acceptors the number of acceptor threads to use, or -1 for a default value.
      * If 0, then no acceptor threads will be launched and some other mechanism will need to be used to accept new connections.
      * @param factories The {@link ConnectionFactory} instances to use
+//        super(server, null, null, null, -1, new HttpConnectionFactory());
      */
     public AbstractConnector(
+        Server server)
+/*
         Server server,
         Executor executor,
         Scheduler scheduler,
         ByteBufferPool bufferPool,
         int acceptors,
         ConnectionFactory... factories)
+*/
     {
         _server = Objects.requireNonNull(server);
-
+/*
         _executor = executor != null ? executor : _server.getThreadPool();
         installBean(_executor, executor != null);
 
@@ -100,18 +109,24 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
 
         _bufferPool = bufferPool != null ? bufferPool : server.getByteBufferPool();
         installBean(_bufferPool, bufferPool != null);
+*/
+        _executor = _server.getThreadPool();
+        installBean(_executor, false);
 
-        for (ConnectionFactory factory : factories)
-        {
+        _scheduler = _server.getScheduler();
+        installBean(_scheduler, false);
+
+        _bufferPool = server.getByteBufferPool();
+        installBean(_bufferPool, false);
+
+        ConnectionFactory factory = new HttpConnectionFactory();
+//        for (ConnectionFactory factory : factories)
+//        {
             addConnectionFactory(factory);
-        }
+//        }
 
         _cores = Runtime.getRuntime().availableProcessors();
-        if (acceptors < 0)
-            acceptors = 1;
-        if (acceptors > _cores)
-            LOG.warn("Acceptors should be <= availableProcessors: {} ", this);
-        _acceptors = new Thread[acceptors];
+        _acceptors = new Thread[_cores];
     }
 
     @Override
@@ -137,6 +152,33 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
     public long getIdleTimeout()
     {
         return _idleTimeout;
+    }
+
+    public void setHost(String host)
+    {
+        _host = host;
+    }
+
+    @ManagedAttribute("The network interface this connector binds to as an IP address or a hostname.  If null or 0.0.0.0, then bind to all interfaces.")
+    public String getHost()
+    {
+        return _host;
+    }
+
+    public void setPort(int port)
+    {
+        _port = port;
+    }
+
+    @ManagedAttribute("Port this connector listens on. If set the 0 a random port is assigned which may be obtained with getLocalPort()")
+    public int getPort()
+    {
+        return _port;
+    }
+
+    public int getLocalPort()
+    {
+        return -1;
     }
 
     /**
@@ -188,9 +230,26 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
         return _acceptors.length;
     }
 
+    public void open() throws IOException
+    {
+        for (EventListener l : getEventListeners()) {
+            if (l instanceof Connector.Listener listener) {
+                try {
+                    listener.onOpen(this);
+                }
+                catch (Throwable x) {
+                    if (LOG.isDebugEnabled())
+                        LOG.debug("failure while notifying listener {}", listener, x);
+                }
+            }
+        }
+    }
+
     @Override
     protected void doStart() throws Exception
     {
+        open();
+ 
         if (!getBeans(ComplianceViolation.Listener.class).isEmpty() ||
             !getServer().getBeans(ComplianceViolation.Listener.class).isEmpty())
             LOG.warn("ComplianceViolation.Listeners must now be set on HttpConfiguration");
@@ -228,8 +287,7 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
 
         super.doStart();
 
-        for (int i = 0; i < _acceptors.length; i++)
-        {
+        for (int i = 0; i < _acceptors.length; i++) {
             Acceptor a = new Acceptor(i);
             addBean(a);
             getExecutor().execute(a);
@@ -276,9 +334,25 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
         return shutdown == null || shutdown.isShutdown();
     }
 
+    public void close()
+    {
+        for (EventListener l : getEventListeners()) {
+            if (l instanceof Connector.Listener listener) {
+                try {
+                    listener.onClose(this);
+                }
+                catch (Throwable x) {
+                    if (LOG.isDebugEnabled())
+                        LOG.debug("failure while notifying listener {}", listener, x);
+                }
+            }
+        }
+    }
+
     @Override
     protected void doStop() throws Exception
     {
+        close();
         if (_lease != null)
             _lease.close();
 

@@ -87,7 +87,7 @@ public class Server extends Handler.Abstract implements Attributes
      * Creates server and a {@link ServerConnector} at the passed port.
      *
      * @param port The port of a network HTTP connector (or 0 for a randomly allocated port).
-     * @see NetworkConnector#getLocalPort()
+     * @see Connector#getLocalPort()
      */
     public Server(@Name("port") int port)
     {
@@ -223,7 +223,7 @@ public class Server extends Handler.Abstract implements Attributes
             ShutdownThread.register(this);
 
             // Open network connector to ensure ports are available
-            _connectors.stream().filter(NetworkConnector.class::isInstance).map(NetworkConnector.class::cast).forEach(connector ->
+            _connectors.stream().filter(Connector.class::isInstance).map(Connector.class::cast).forEach(connector ->
                 {
                     try {
                         connector.open();
@@ -299,16 +299,16 @@ public class Server extends Handler.Abstract implements Attributes
     }
 
     /**
-     * @return The URI of the first {@link NetworkConnector} or null
+     * @return The URI of the first {@link Connector} or null
      */
     public URI getURI()
     {
-        NetworkConnector connector = null;
+        Connector connector = null;
         for (Connector c : _connectors)
         {
-            if (c instanceof NetworkConnector)
+            if (c instanceof Connector)
             {
-                connector = (NetworkConnector)c;
+                connector = (Connector)c;
                 break;
             }
         }
