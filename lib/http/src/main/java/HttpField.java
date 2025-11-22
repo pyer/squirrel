@@ -48,6 +48,8 @@ public class HttpField
     private final String _name;
     private final String _value;
     private int _hash = 0;
+    protected boolean _persistent = false;
+    protected HttpField _original = null;
 
     /**
      * <p>Creates a new {@link HttpField} with the given {@link HttpHeader},
@@ -106,6 +108,39 @@ public class HttpField
     public HttpField(String name, String value)
     {
         this(HttpHeader.CACHE.get(name), name, value);
+    }
+
+    /**
+     * <p>Creates a new persistent {@link HttpField} with the given current and original fields.</p>
+     *
+     */
+    public HttpField(HttpField field, HttpField original)
+    {
+        this(field.getHeader(), field.getName(), field.getValue());
+        _persistent = true;
+        _original = original == null ? this : original;
+    }
+
+    public HttpField(HttpHeader header, String value, HttpField original)
+    {
+        this(header, header.asString(), value);
+        _persistent = true;
+        _original = original == null ? this : original;
+    }
+
+    /**
+     * <p>Returns whether this field is persistent or not.</p>
+     *
+     * @return whether this field is persistent or not
+     */
+    public boolean isPersistent()
+    {
+        return _persistent;
+    }
+
+    public HttpField getOriginal()
+    {
+        return _original;
     }
 
     /**

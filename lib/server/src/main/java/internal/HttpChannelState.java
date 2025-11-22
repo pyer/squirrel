@@ -35,12 +35,12 @@ import ab.squirrel.http.HttpField;
 import ab.squirrel.http.HttpFields;
 import ab.squirrel.http.HttpHeader;
 import ab.squirrel.http.HttpMethod;
-//import ab.squirrel.http.HttpScheme;
 import ab.squirrel.http.HttpStatus;
 import ab.squirrel.http.HttpURI;
 import ab.squirrel.http.HttpVersion;
 import ab.squirrel.http.MetaData;
 import ab.squirrel.http.MultiPartFormData.Parts;
+import ab.squirrel.http.PreEncodedHttpField;
 import ab.squirrel.http.Trailers;
 import ab.squirrel.http.UriCompliance;
 import ab.squirrel.io.ByteBufferPool;
@@ -95,8 +95,8 @@ public class HttpChannelState implements HttpChannel, Components
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpChannelState.class);
     private static final Throwable NOTHING_TO_SEND = new Throwable("nothing_to_send");
-    private static final HttpField SERVER_VERSION = new ResponseHttpFields.PersistentPreEncodedHttpField(HttpHeader.SERVER, HttpConfiguration.SERVER_VERSION);
-    private static final HttpField POWERED_BY = new ResponseHttpFields.PersistentPreEncodedHttpField(HttpHeader.X_POWERED_BY, HttpConfiguration.SERVER_VERSION);
+    private static final HttpField SERVER_VERSION = new PreEncodedHttpField(HttpHeader.SERVER, HttpConfiguration.SERVER_VERSION, true);
+    private static final HttpField POWERED_BY     = new PreEncodedHttpField(HttpHeader.X_POWERED_BY, HttpConfiguration.SERVER_VERSION, true);
 
     private final AutoLock _lock = new AutoLock();
     private final HandlerInvoker _handlerInvoker = new HandlerInvoker();

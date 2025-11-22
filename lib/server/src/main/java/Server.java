@@ -27,11 +27,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-//import java.util.concurrent.TimeUnit;
 
 import ab.squirrel.http.DateGenerator;
 import ab.squirrel.http.HttpField;
 import ab.squirrel.http.HttpHeader;
+import ab.squirrel.http.PreEncodedHttpField;
 import ab.squirrel.io.ArrayByteBufferPool;
 import ab.squirrel.io.ByteBufferPool;
 import ab.squirrel.io.Connection;
@@ -41,7 +41,6 @@ import ab.squirrel.util.Attributes;
 import ab.squirrel.util.Callback;
 import ab.squirrel.util.DecoratedObjectFactory;
 import ab.squirrel.util.IO;
-//import ab.squirrel.util.NanoTime;
 import ab.squirrel.util.annotation.ManagedAttribute;
 import ab.squirrel.util.annotation.ManagedObject;
 import ab.squirrel.util.annotation.Name;
@@ -61,7 +60,6 @@ import org.slf4j.LoggerFactory;
 
 @ManagedObject
 public class Server extends Handler.Abstract implements Attributes
-//public class Server extends Handler.Abstract
 {
     private static final Logger LOG = LoggerFactory.getLogger(Server.class);
 
@@ -191,7 +189,6 @@ public class Server extends Handler.Abstract implements Attributes
     /**
      * @return A {@link HttpField} instance efficiently recording the current time to a second resolution,
      * that cannot be cleared from a {@link ResponseHttpFields} instance.
-     * @see ResponseHttpFields.PersistentPreEncodedHttpField
      */
     public HttpField getDateField()
     {
@@ -206,7 +203,8 @@ public class Server extends Handler.Abstract implements Attributes
                 df = _dateField;
                 if (df == null || df._seconds != seconds)
                 {
-                    HttpField field = new ResponseHttpFields.PersistentPreEncodedHttpField(HttpHeader.DATE, DateGenerator.formatDate(now));
+                    // Create a persistent HttpField
+                    HttpField field = new PreEncodedHttpField(HttpHeader.DATE, DateGenerator.formatDate(now), true, null);
                     _dateField = new DateField(seconds, field);
                     return field;
                 }

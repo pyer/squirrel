@@ -25,8 +25,6 @@ import ab.squirrel.http.PreEncodedHttpField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static ab.squirrel.server.internal.ResponseHttpFields.Persistent.isPersistent;
-
 public class ResponseHttpFields implements HttpFields.Mutable
 {
     private static final Logger LOG = LoggerFactory.getLogger(ResponseHttpFields.class);
@@ -109,8 +107,8 @@ public class ResponseHttpFields implements HttpFields.Mutable
             for (ListIterator<HttpField> iterator = _fields.listIterator(_fields.size()); iterator.hasPrevious();)
             {
                 HttpField field = iterator.previous();
-                if (field instanceof Persistent persistent)
-                    iterator.set(persistent.getOriginal());
+                if (field.isPersistent())
+                    iterator.set(field.getOriginal());
                 else
                     iterator.remove();
             }
@@ -151,7 +149,7 @@ public class ResponseHttpFields implements HttpFields.Mutable
             {
                 if (_committed.get())
                     throw new UnsupportedOperationException("Read Only");
-                if (isPersistent(_current))
+                if (_current.isPersistent())
                     throw new UnsupportedOperationException("Persistent field");
                 if (_current == null)
                     throw new IllegalStateException("No current field");
@@ -212,7 +210,7 @@ public class ResponseHttpFields implements HttpFields.Mutable
             {
                 if (_committed.get())
                     throw new UnsupportedOperationException("Read Only");
-                if (isPersistent(_current))
+                if (_current.isPersistent())
                     throw new UnsupportedOperationException("Persistent field");
                 if (_current == null)
                     throw new IllegalStateException("No current field");
@@ -225,16 +223,22 @@ public class ResponseHttpFields implements HttpFields.Mutable
             {
                 if (_committed.get())
                     throw new UnsupportedOperationException("Read Only");
-                if (_current instanceof Persistent persistent)
-                {
+                if (_current.isPersistent()) {
                     // cannot change the field name
                     if (field == null || !field.isSameName(_current))
                         throw new UnsupportedOperationException("Persistent field");
 
                     // new field must also be persistent and clear back to the previous value
+                    /*
                     field = (field instanceof PreEncodedHttpField)
                         ? new PersistentPreEncodedHttpField(_current.getHeader(), field.getValue(), persistent.getOriginal())
                         : new PersistentHttpField(field, persistent.getOriginal());
+                    */
+                    if (field instanceof PreEncodedHttpField) {
+                        field = new PreEncodedHttpField(_current.getHeader(), field.getValue(), true, field.getOriginal());
+                    } else {
+                        field = new HttpField(field, field.getOriginal());
+                    }
                 }
                 if (_current == null)
                     throw new IllegalStateException("No current field");
@@ -262,85 +266,4 @@ public class ResponseHttpFields implements HttpFields.Mutable
         return _fields.toString();
     }
 
-    /**
-     * A marker interface for {@link HttpField}s that cannot be {@link #remove(HttpHeader) removed} or {@link #clear() cleared}
-     * from a {@link ResponseHttpFields} instance. Persistent fields are not immutable in the {@link ResponseHttpFields}
-     * and may be replaced with a different value. i.e. A Persistent field cannot be removed but can be overwritten.
-     */
-    public interface Persistent
-    {
-        static boolean isPersistent(HttpField field)
-        {
-            return field instanceof Persistent;
-        }
-
-        /**
-         * @return the original persistent field set before any mutations
-         */
-        HttpField getOriginal();
-    }
-
-    /**
-     * A {@link HttpField} that is a {@link Persistent}.
-     */
-    public static class PersistentHttpField extends HttpField implements Persistent
-    {
-        private final HttpField _field;
-        private final HttpField _original;
-
-        public PersistentHttpField(HttpField field)
-        {
-            this(field, null);
-        }
-
-        PersistentHttpField(HttpField field, HttpField original)
-        {
-            super(field.getHeader(), field.getName(), field.getValue());
-            _field = field;
-            _original = original == null ? this : original;
-        }
-
-        @Override
-        public int getIntValue()
-        {
-            return _field.getIntValue();
-        }
-
-        @Override
-        public long getLongValue()
-        {
-            return _field.getIntValue();
-        }
-
-        @Override
-        public HttpField getOriginal()
-        {
-            return _original;
-        }
-    }
-
-    /**
-     * A {@link PreEncodedHttpField} that is a {@link Persistent}.
-     */
-    public static class PersistentPreEncodedHttpField extends PreEncodedHttpField implements Persistent
-    {
-        private final HttpField _original;
-
-        public PersistentPreEncodedHttpField(HttpHeader header, String value)
-        {
-            this(header, value, null);
-        }
-
-        PersistentPreEncodedHttpField(HttpHeader header, String value, HttpField original)
-        {
-            super(header, value);
-            _original = original == null ? this : original;
-        }
-
-        @Override
-        public HttpField getOriginal()
-        {
-            return _original;
-        }
-    }
 }

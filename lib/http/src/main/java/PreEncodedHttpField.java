@@ -90,6 +90,21 @@ public class PreEncodedHttpField extends HttpField
         this(header, header.asString(), value);
     }
 
+    public PreEncodedHttpField(HttpHeader header, String value, boolean persistent)
+    {
+        this(header, header.asString(), value);
+        _persistent = persistent;
+        _original = this;
+       // original == null ? this : original;
+    }
+
+    public PreEncodedHttpField(HttpHeader header, String value, boolean persistent, HttpField original)
+    {
+        this(header, header.asString(), value);
+        _persistent = persistent;
+        _original = original == null ? this : original;
+    }
+
     public PreEncodedHttpField(HttpHeader header, long value)
     {
         this(header, header.asString(), Long.toString(value), value);
