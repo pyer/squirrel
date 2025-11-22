@@ -45,7 +45,6 @@ import ab.squirrel.util.annotation.ManagedAttribute;
 import ab.squirrel.util.annotation.ManagedObject;
 import ab.squirrel.util.annotation.Name;
 import ab.squirrel.util.component.AttributeContainerMap;
-import ab.squirrel.util.component.Graceful;
 import ab.squirrel.util.component.LifeCycle;
 import ab.squirrel.util.resource.FileSystemPool;
 import ab.squirrel.util.resource.Resource;
@@ -316,7 +315,6 @@ public class Server extends Handler.Abstract implements Attributes
 
         try
         {
-            String protocol = connector.getDefaultConnectionFactory().getProtocol();
             String scheme = "http";
 
             String host = connector.getHost();

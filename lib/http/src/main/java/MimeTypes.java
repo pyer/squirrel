@@ -765,4 +765,42 @@ public class MimeTypes
             return value;
         return builder.toString();
     }
+
+    public static class Mutable extends MimeTypes
+    {
+        public Mutable()
+        {
+            this(DEFAULTS);
+        }
+
+        public Mutable(MimeTypes defaults)
+        {
+            super(defaults);
+        }
+
+        /**
+         * Set a mime mapping
+         *
+         * @param extension the extension
+         * @param type the mime type
+         * @return previous value
+         */
+        public String addMimeMapping(String extension, String type)
+        {
+            if (extension.contains("."))
+                throw new IllegalArgumentException("extensions cannot contain '.'");
+            return _mimeMap.put(StringUtil.asciiToLowerCase(extension), normalizeMimeType(type));
+        }
+
+        public String addInferred(String contentType, String encoding)
+        {
+            return nameOf(_inferredEncodings.put(contentType, Charset.forName(encoding)));
+        }
+
+        public String addAssumed(String contentType, String encoding)
+        {
+            return nameOf(_assumedEncodings.put(contentType, Charset.forName(encoding)));
+        }
+    }
+
 }

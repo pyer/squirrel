@@ -99,20 +99,6 @@ public interface Connector extends LifeCycle, Container, Closeable, Graceful
      */
     void close();
 
-    /**
-     * @param nextProtocol the next protocol
-     * @return the {@link ConnectionFactory} associated with the protocol name
-     */
-    public ConnectionFactory getConnectionFactory(String nextProtocol);
-
-    public <T> T getConnectionFactory(Class<T> factoryType);
-
-    /**
-     * Get the default {@link ConnectionFactory} associated with the default protocol name.
-     * @return the default {@link ConnectionFactory} associated with the default protocol name
-     */
-    public ConnectionFactory getDefaultConnectionFactory();
-
     public Collection<ConnectionFactory> getConnectionFactories();
 
     public List<String> getProtocols();

@@ -66,8 +66,6 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
     private Shutdown _shutdown;
     private long _idleTimeout = 30000;
     private long _shutdownIdleTimeout = 1000L;
-    private String _defaultProtocol;
-    private ConnectionFactory _defaultConnectionFactory;
     /* The name used to link up virtual host configuration to named connectors */
     private String _name;
     private int _cores;
@@ -277,12 +275,6 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
             }
         };
 
-        if (_defaultProtocol == null)
-            throw new IllegalStateException("No default protocol for " + this);
-        _defaultConnectionFactory = getConnectionFactory(_defaultProtocol);
-        if (_defaultConnectionFactory == null)
-            throw new IllegalStateException("No protocol factory for default protocol '" + _defaultProtocol + "' in " + this);
-
         _lease = ThreadPoolBudget.leaseFrom(getExecutor(), this, _acceptors.length);
 
         super.doStart();
@@ -406,26 +398,11 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
         }
     }
 
-    @Override
     public ConnectionFactory getConnectionFactory(String protocol)
     {
         try (AutoLock lock = _lock.lock())
         {
             return _factories.get(StringUtil.asciiToLowerCase(protocol));
-        }
-    }
-
-    @Override
-    public <T> T getConnectionFactory(Class<T> factoryType)
-    {
-        try (AutoLock lock = _lock.lock())
-        {
-            for (ConnectionFactory f : _factories.values())
-            {
-                if (factoryType.isAssignableFrom(f.getClass()))
-                    return (T)f;
-            }
-            return null;
         }
     }
 
@@ -441,8 +418,8 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
             ConnectionFactory old = _factories.remove(key);
             if (old != null)
             {
-                if (old.getProtocol().equals(_defaultProtocol))
-                    _defaultProtocol = null;
+//                if (old.getProtocol().equals(_defaultProtocol))
+//                    _defaultProtocol = null;
                 toRemove.add(old);
             }
             _factories.put(key, factory);
@@ -464,8 +441,8 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
 
         // add new Bean
         addBean(factory);
-        if (_defaultProtocol == null)
-            _defaultProtocol = factory.getProtocol();
+//        if (_defaultProtocol == null)
+//            _defaultProtocol = factory.getProtocol();
         if (LOG.isDebugEnabled())
             LOG.debug("{} added {}", this, factory);
     }
@@ -501,8 +478,6 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
             throw new IllegalStateException(getState());
 
         ConnectionFactory factory = _factories.remove(StringUtil.asciiToLowerCase(protocol));
-        if (_factories.isEmpty())
-            _defaultProtocol = null;
         removeBean(factory);
         return factory;
     }
@@ -536,7 +511,6 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
             throw new IllegalStateException(getState());
 
         _factories.clear();
-        _defaultProtocol = null;
     }
 
     @ManagedAttribute("The priority delta to apply to acceptor threads")
@@ -572,27 +546,6 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
     public List<String> getProtocols()
     {
         return new ArrayList<>(_factories.keySet());
-    }
-
-    @ManagedAttribute("This connector's default protocol")
-    public String getDefaultProtocol()
-    {
-        return _defaultProtocol;
-    }
-
-    public void setDefaultProtocol(String defaultProtocol)
-    {
-        _defaultProtocol = StringUtil.asciiToLowerCase(defaultProtocol);
-        if (isRunning())
-            _defaultConnectionFactory = getConnectionFactory(_defaultProtocol);
-    }
-
-    @Override
-    public ConnectionFactory getDefaultConnectionFactory()
-    {
-        if (isStarted())
-            return _defaultConnectionFactory;
-        return getConnectionFactory(_defaultProtocol);
     }
 
     protected boolean handleAcceptFailure(Throwable ex)
@@ -762,9 +715,8 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
     @Override
     public String toString()
     {
-        return String.format("%s@%x{%s, %s}",
+        return String.format("%s@%x",
             _name == null ? getClass().getSimpleName() : _name,
-            hashCode(),
-            getDefaultProtocol(), getProtocols().stream().collect(Collectors.joining(", ", "(", ")")));
+            hashCode());
     }
 }

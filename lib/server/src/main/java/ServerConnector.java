@@ -55,6 +55,7 @@ public class ServerConnector extends AbstractConnector
     private volatile boolean _acceptedTcpNoDelay = true;
     private volatile int _acceptedReceiveBufferSize = -1;
     private volatile int _acceptedSendBufferSize = -1;
+    private String _protocol = "HTTP/1.1";
 
     public ServerConnector(
         @Name("server") Server server)
@@ -379,7 +380,7 @@ public class ServerConnector extends AbstractConnector
         @Override
         public Connection newConnection(SelectableChannel channel, EndPoint endpoint, Object attachment) throws IOException
         {
-            return getDefaultConnectionFactory().newConnection(ServerConnector.this, endpoint);
+            return getConnectionFactory(_protocol).newConnection(ServerConnector.this, endpoint);
         }
 
         @Override
