@@ -36,9 +36,7 @@ import ab.squirrel.util.annotation.ManagedObject;
 
 /**
  * HTTP Configuration.
- * <p>This class is a holder of HTTP configuration.  Typically an HTTPConfiguration
- * instance is instantiated and passed to a {@link ConnectionFactory} that can
- * create HTTP channels (e.g. HTTP, AJP or FCGI).</p>
+ * <p>This class is a holder of HTTP configuration.
  * <p>The configuration held by this class is not for the wire protocol,
  * but for the interpretation and handling of HTTP requests that could
  * be transported by a variety of protocols.

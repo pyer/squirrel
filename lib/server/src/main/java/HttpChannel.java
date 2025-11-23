@@ -28,7 +28,6 @@ import ab.squirrel.util.thread.Invocable;
  * with the upper (application code) layer {@link Handler}.</p>
  * <p>An {@code HttpChannel} instance may be used for many HTTP request/response cycles
  * from the same connection; however, only a single cycle may be active at any time.</p>
- * <p>Default implementations of this interface may be created via {@link DefaultFactory}.</p>
  */
 public interface HttpChannel extends Invocable
 {
@@ -150,29 +149,4 @@ public interface HttpChannel extends Invocable
         throw new IllegalStateException("Unable to find HttpChannel from " + request);
     }
 
-    /**
-     * <p>A factory for {@link HttpChannel} instances.</p>
-     *
-     * @see DefaultFactory
-     */
-    interface Factory
-    {
-        /**
-         * @param connectionMetaData the {@code ConnectionMetaData} associated with the channel.
-         * @return a new {@link HttpChannel} instance.
-         */
-        HttpChannel newHttpChannel(ConnectionMetaData connectionMetaData);
-    }
-
-    /**
-     * <p>The factory that creates default implementations of {@link HttpChannel}.</p>
-     */
-    class DefaultFactory implements Factory
-    {
-        @Override
-        public HttpChannel newHttpChannel(ConnectionMetaData connectionMetaData)
-        {
-            return new HttpChannelState(connectionMetaData);
-        }
-    }
 }

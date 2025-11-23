@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 import ab.squirrel.util.Attributes;
-import ab.squirrel.util.DecoratedObjectFactory;
 import ab.squirrel.util.Decorator;
 import ab.squirrel.util.resource.Resource;
 
@@ -34,7 +33,6 @@ import ab.squirrel.util.resource.Resource;
  *     <li>has an optional {@link ClassLoader} that that is set as the {@link Thread#setContextClassLoader(ClassLoader) Thread context ClassLoader}
  *         for {@link Thread}s handling the request.</li>
  *     <li>is an {@link java.util.concurrent.Executor} that can execute jobs in with the {@link Thread#setContextClassLoader(ClassLoader) Thread context ClassLoader}</li>
- *     <li>is a {@link ab.squirrel.util.Decorator} using the {@link DecoratedObjectFactory } that can create objects specific to the context.</li>
  * </ul>
  * @see Server#getContext()
  */

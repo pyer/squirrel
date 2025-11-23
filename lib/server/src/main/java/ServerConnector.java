@@ -36,6 +36,9 @@ import ab.squirrel.io.EndPoint;
 import ab.squirrel.io.ManagedSelector;
 import ab.squirrel.io.SelectorManager;
 import ab.squirrel.io.SocketChannelEndPoint;
+
+import ab.squirrel.server.internal.HttpConnection;
+
 import ab.squirrel.util.IO;
 import ab.squirrel.util.annotation.ManagedAttribute;
 import ab.squirrel.util.annotation.ManagedObject;
@@ -55,6 +58,7 @@ public class ServerConnector extends AbstractConnector
     private volatile boolean _acceptedTcpNoDelay = true;
     private volatile int _acceptedReceiveBufferSize = -1;
     private volatile int _acceptedSendBufferSize = -1;
+    private int _inputBufferSize = 8192;
 
     public ServerConnector(
         @Name("server") Server server)
@@ -379,9 +383,21 @@ public class ServerConnector extends AbstractConnector
         @Override
         public Connection newConnection(SelectableChannel channel, EndPoint endpoint, Object attachment) throws IOException
         {
-            HttpConnectionFactory factory = new HttpConnectionFactory();
-            return factory.newConnection(ServerConnector.this, endpoint);
+            HttpConfiguration config = new HttpConfiguration();
+            Connector connector = ServerConnector.this;
+            HttpConnection connection = new HttpConnection(config, connector, endpoint);
+            connection.setUseInputDirectByteBuffers(config.isUseInputDirectByteBuffers());
+            connection.setUseOutputDirectByteBuffers(config.isUseOutputDirectByteBuffers());
+            // Add Connection.Listeners from Connector.
+            connector.getEventListeners().forEach(connection::addEventListener);
+
+        // Add Connection.Listeners from this factory.
+        //getEventListeners().forEach(connection::addEventListener);
+
+            connection.setInputBufferSize(_inputBufferSize);
+            return connection;
         }
+
 
         @Override
         protected void endPointOpened(EndPoint endpoint)
