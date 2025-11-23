@@ -11,7 +11,7 @@
 // ========================================================================
 //
 
-package ab.squirrel.http;
+package ab.squirrel;
 
 import java.io.IOException;
 import java.nio.file.InvalidPathException;

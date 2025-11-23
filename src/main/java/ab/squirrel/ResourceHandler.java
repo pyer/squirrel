@@ -42,7 +42,7 @@ import ab.squirrel.http.MultiPartByteRanges;
 import ab.squirrel.http.PreEncodedHttpField;
 import ab.squirrel.http.QuotedCSV;
 import ab.squirrel.http.QuotedQualityCSV;
-import ab.squirrel.http.ResourceHttpContentFactory;
+//import ab.squirrel.http.ResourceHttpContentFactory;
 
 import ab.squirrel.io.ArrayByteBufferPool;
 import ab.squirrel.io.ByteBufferPool;

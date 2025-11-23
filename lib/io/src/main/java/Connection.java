@@ -143,9 +143,6 @@ public interface Connection extends Closeable
     /**
      * <p>A Listener for connection events.</p>
      * <p>Listeners can be added to a {@link Connection} to get open and close events.
-     * The AbstractConnectionFactory implements a pattern where objects implement
-     * this interface that have been added via {@link Container#addBean(Object)} to
-     * the Connector or ConnectionFactory are added as listeners to all new connections
      * </p>
      */
     interface Listener extends EventListener
