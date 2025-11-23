@@ -13,14 +13,21 @@
 
 package ab.squirrel.server;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 import ab.squirrel.http.ComplianceViolation;
 import ab.squirrel.http.HttpVersion;
+import ab.squirrel.io.AbstractConnection;
 import ab.squirrel.io.Connection;
 import ab.squirrel.io.EndPoint;
 import ab.squirrel.server.internal.HttpConnection;
 import ab.squirrel.util.annotation.Name;
+import ab.squirrel.util.annotation.ManagedAttribute;
+import ab.squirrel.util.annotation.ManagedObject;
+import ab.squirrel.util.component.ContainerLifeCycle;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,18 +37,20 @@ import org.slf4j.LoggerFactory;
  * {@link HttpConnection}s are configured by a {@link HttpConfiguration} instance that is either created by
  * default or passed in to the constructor.
  */
-public class HttpConnectionFactory extends AbstractConnectionFactory implements HttpConfiguration.ConnectionFactory
+public class HttpConnectionFactory extends ContainerLifeCycle
 {
     private static final Logger LOG = LoggerFactory.getLogger(HttpConnectionFactory.class);
-    private final HttpConfiguration _config;
+    private HttpConfiguration _config;
     private boolean _useInputDirectByteBuffers;
     private boolean _useOutputDirectByteBuffers;
+    private int _inputBufferSize = 8192;
 
     public HttpConnectionFactory()
     {
-        this(new HttpConfiguration());
+        new HttpConfiguration();
     }
 
+/*
     public HttpConnectionFactory(@Name("config") HttpConfiguration config)
     {
         super(HttpVersion.HTTP_1_1.asString());
@@ -50,8 +59,17 @@ public class HttpConnectionFactory extends AbstractConnectionFactory implements 
         setUseInputDirectByteBuffers(_config.isUseInputDirectByteBuffers());
         setUseOutputDirectByteBuffers(_config.isUseOutputDirectByteBuffers());
     }
+*/
+    public int getInputBufferSize()
+    {
+        return _inputBufferSize;
+    }
 
-    @Override
+    public void setInputBufferSize(int size)
+    {
+        _inputBufferSize = size;
+    }
+
     public HttpConfiguration getHttpConfiguration()
     {
         return _config;
@@ -77,12 +95,31 @@ public class HttpConnectionFactory extends AbstractConnectionFactory implements 
         _useOutputDirectByteBuffers = useOutputDirectByteBuffers;
     }
 
-    @Override
     public Connection newConnection(Connector connector, EndPoint endPoint)
     {
+        _config = new HttpConfiguration();
         HttpConnection connection = new HttpConnection(_config, connector, endPoint);
         connection.setUseInputDirectByteBuffers(isUseInputDirectByteBuffers());
         connection.setUseOutputDirectByteBuffers(isUseOutputDirectByteBuffers());
         return configure(connection, connector, endPoint);
     }
+
+    protected <T extends AbstractConnection> T configure(T connection, Connector connector, EndPoint endPoint)
+    {
+        // Add Connection.Listeners from Connector.
+        connector.getEventListeners().forEach(connection::addEventListener);
+
+        // Add Connection.Listeners from this factory.
+        getEventListeners().forEach(connection::addEventListener);
+
+        connection.setInputBufferSize(getInputBufferSize());
+
+        return connection;
+    }
+
+    public String toString()
+    {
+        return String.format("%s@%x", this.getClass().getSimpleName(), hashCode());
+    }
+
 }

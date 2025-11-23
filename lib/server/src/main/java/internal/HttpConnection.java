@@ -53,7 +53,6 @@ import ab.squirrel.io.EndPoint;
 import ab.squirrel.io.RetainableByteBuffer;
 import ab.squirrel.io.RuntimeIOException;
 import ab.squirrel.server.AbstractMetaDataConnection;
-import ab.squirrel.server.ConnectionFactory;
 import ab.squirrel.server.ConnectionMetaData;
 import ab.squirrel.server.Connector;
 import ab.squirrel.server.HttpChannel;
@@ -210,12 +209,6 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
     {
         HttpStreamOverHTTP1 stream = _stream.get();
         return (stream != null) ? stream._version : HttpVersion.HTTP_1_1;
-    }
-
-    @Override
-    public String getProtocol()
-    {
-        return getHttpVersion().asString();
     }
 
     @Override
@@ -540,21 +533,6 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
             releaseRequestBuffer();
 
         return handle;
-    }
-
-    private boolean upgrade(HttpStreamOverHTTP1 stream)
-    {
-        if (stream.upgrade())
-        {
-            _httpChannel.recycle();
-            _parser.close();
-            _generator.reset();
-            return true;
-        }
-        else
-        {
-            return false;
-        }
     }
 
     @Override
@@ -1251,16 +1229,6 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
                         HttpMethod.CONNECT.is(_method);
 
                     _generator.setPersistent(persistent);
-
-                    // Try to upgrade before calling the application.
-                    // In case of WebSocket, it is the application that performs the upgrade
-                    // so upgrade(stream) will return false, and the upgrade will be finished
-                    // in HttpStreamOverHTTP1.succeeded().
-                    // In case of HTTP/2, the application is not called and the upgrade
-                    // is finished here by upgrade(stream) which will return true.
-                    if (_upgrade != null && HttpConnection.this.upgrade(_stream.get()))
-                        return null;
-
                     break;
                 }
 
@@ -1269,13 +1237,6 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
                     // Allow prior knowledge "upgrade" to HTTP/2 only if the connector supports h2c.
                     _upgrade = PREAMBLE_UPGRADE_H2C;
 
-                    if (HttpMethod.PRI.is(_method) &&
-                        "*".equals(_uri.getPath()) &&
-                        _headerBuilder.size() == 0 &&
-                        HttpConnection.this.upgrade(_stream.get()))
-                        return null;
-
-                    // TODO is this sufficient?
                     _parser.close();
                     throw new BadMessageException(HttpStatus.UPGRADE_REQUIRED_426, "Upgrade Required");
                 }
@@ -1401,56 +1362,6 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
             return _stream.get() != this || _generator.isCommitted();
         }
 
-        private boolean upgrade()
-        {
-            if (LOG.isDebugEnabled())
-                LOG.debug("upgrade {} {}", this, _upgrade);
-
-            // If no upgrade headers then there is nothing to do.
-            if (!_connectionUpgrade && _upgrade == null)
-                return false;
-
-            @SuppressWarnings("ReferenceEquality")
-            boolean isPriorKnowledgeH2C = _upgrade == PREAMBLE_UPGRADE_H2C;
-            if (!isPriorKnowledgeH2C  && !_connectionUpgrade)
-                throw new BadMessageException(HttpStatus.BAD_REQUEST_400);
-
-            // Find the upgrade factory.
-            ConnectionFactory.Upgrading factory = getConnector().getConnectionFactories().stream()
-                .filter(f -> f instanceof ConnectionFactory.Upgrading)
-                .map(ConnectionFactory.Upgrading.class::cast)
-                .filter(f -> f.getProtocols().contains(_upgrade.getValue()))
-                .findAny()
-                .orElse(null);
-
-            if (factory == null)
-            {
-                if (LOG.isDebugEnabled())
-                    LOG.debug("No factory for {} in {}", _upgrade, getConnector());
-                return false;
-            }
-
-            HttpFields.Mutable response101 = HttpFields.build();
-            Connection upgradeConnection = factory.upgradeConnection(getConnector(), getEndPoint(), _request, response101);
-            if (upgradeConnection == null)
-            {
-                if (LOG.isDebugEnabled())
-                    LOG.debug("Upgrade ignored for {} by {}", _upgrade, factory);
-                return false;
-            }
-
-            // Prior knowledge HTTP/2 does not need a 101 response (it will directly be
-            // in HTTP/2 format) while HTTP/1.1 to HTTP/2 upgrade needs a 101 response.
-            if (!isPriorKnowledgeH2C)
-                send(_request, new MetaData.Response(HttpStatus.SWITCHING_PROTOCOLS_101, null, HttpVersion.HTTP_1_1, response101, 0), false, null, Callback.NOOP);
-
-            if (LOG.isDebugEnabled())
-                LOG.debug("Upgrading from {} to {}", getEndPoint().getConnection(), upgradeConnection);
-            getEndPoint().upgrade(upgradeConnection);
-
-            return true;
-        }
-
         @Override
         public void succeeded()
         {
@@ -1466,16 +1377,6 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
                 if (LOG.isDebugEnabled())
                     LOG.debug("abort due to pending read {} {} ", this, getEndPoint());
                 abort(new IOException("Pending read in onCompleted"));
-                return;
-            }
-
-            Connection upgradeConnection = (Connection)_httpChannel.getRequest().getAttribute(HttpStream.UPGRADE_CONNECTION_ATTRIBUTE);
-            if (upgradeConnection != null)
-            {
-                getEndPoint().upgrade(upgradeConnection);
-                _httpChannel.recycle();
-                _parser.close();
-                _generator.reset();
                 return;
             }
 

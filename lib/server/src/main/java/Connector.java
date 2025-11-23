@@ -99,10 +99,6 @@ public interface Connector extends LifeCycle, Container, Closeable, Graceful
      */
     void close();
 
-    public Collection<ConnectionFactory> getConnectionFactories();
-
-    public List<String> getProtocols();
-
     /**
      * @return the max idle timeout for connections in milliseconds
      */

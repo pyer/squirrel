@@ -209,14 +209,6 @@ public class MetaData implements Iterable<HttpField>
             return _uri;
         }
 
-        /**
-         * @return the protocol associated with {@link #isTunnel(String, int) tunnel} requests, if any
-         */
-        public String getProtocol()
-        {
-            return null;
-        }
-
         public boolean is100ContinueExpected()
         {
             return getHttpFields().contains(HttpHeader.EXPECT, HttpHeaderValue.CONTINUE.asString());
@@ -226,54 +218,8 @@ public class MetaData implements Iterable<HttpField>
         public String toString()
         {
             HttpFields headers = getHttpFields();
-            return String.format("%s{u=%s,%s,h=%d,cl=%d,p=%s}",
-                    getMethod(), getHttpURI(), getHttpVersion(), headers.size(), getContentLength(), getProtocol());
-        }
-    }
-
-    /**
-     * <p>Immutable HTTP CONNECT request information.</p>
-     */
-    public static class ConnectRequest extends Request
-    {
-        private final String _protocol;
-
-        public ConnectRequest(HttpScheme scheme, HostPortHttpField authority, String pathQuery, HttpFields headers, String protocol)
-        {
-            this(scheme == null ? null : scheme.asString(), authority, pathQuery, headers, protocol);
-        }
-
-        public ConnectRequest(long beginNanoTime, HttpScheme scheme, HostPortHttpField authority, String pathQuery, HttpFields headers, String protocol)
-        {
-            this(beginNanoTime, scheme == null ? null : scheme.asString(), authority, pathQuery, headers, protocol);
-        }
-
-        public ConnectRequest(String scheme, HostPortHttpField authority, String pathQuery, HttpFields headers, String protocol)
-        {
-            this(NanoTime.now(), scheme, authority, pathQuery, headers, protocol);
-        }
-
-        public ConnectRequest(long beginNanoTime, String scheme, HostPortHttpField authority, String pathQuery, HttpFields headers, String protocol)
-        {
-            super(beginNanoTime,
-                HttpMethod.CONNECT.asString(),
-                HttpURI.build()
-                    .scheme(scheme)
-                    .host(authority == null ? null : authority.getHost())
-                    .port(authority == null ? -1 : authority.getPort())
-                    .pathQuery(pathQuery),
-                HttpVersion.HTTP_2,
-                headers,
-                -1,
-                null
-            );
-            _protocol = protocol;
-        }
-
-        @Override
-        public String getProtocol()
-        {
-            return _protocol;
+            return String.format("%s{u=%s,%s,h=%d,cl=%d}",
+                    getMethod(), getHttpURI(), getHttpVersion(), headers.size(), getContentLength());
         }
     }
 

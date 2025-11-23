@@ -81,11 +81,6 @@ public class HttpConfiguration
     private SocketAddress _localAddress;
     private int _maxUnconsumedRequestContentReads = 16;
 
-    public interface ConnectionFactory
-    {
-        HttpConfiguration getHttpConfiguration();
-    }
-
     public HttpConfiguration()
     {
         _formEncodedMethods.put(HttpMethod.POST.asString(), Boolean.TRUE);

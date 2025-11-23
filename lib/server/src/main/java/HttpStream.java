@@ -34,13 +34,6 @@ public interface HttpStream extends Callback
     Exception CONTENT_NOT_CONSUMED = new StaticException("Unconsumed request content");
 
     /**
-     * <p>Attribute name to be used as a {@link Request} attribute to store/retrieve
-     * the {@link Connection} created during the HTTP/1.1 upgrade mechanism or the
-     * HTTP/2 tunnel mechanism.</p>
-     */
-    String UPGRADE_CONNECTION_ATTRIBUTE = HttpStream.class.getName() + ".upgradeConnection";
-
-    /**
      * @return an ID unique within the lifetime scope of the associated protocol connection.
      * This may be a protocol ID (e.g. HTTP/2 stream ID) or it may be unrelated to the protocol.
      */

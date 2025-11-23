@@ -55,7 +55,6 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
 
     private final AutoLock _lock = new AutoLock();
     private final Condition _setAccepting = _lock.newCondition();
-    private final Map<String, ConnectionFactory> _factories = new LinkedHashMap<>(); // Order is important on server side, so we use a LinkedHashMap
     private final Server _server;
     private final Executor _executor;
     private final Scheduler _scheduler;
@@ -83,31 +82,10 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
      * @param bufferPool A {@link ByteBufferPool} for this connector or null to use the Server's ByteBufferPool
      * @param acceptors the number of acceptor threads to use, or -1 for a default value.
      * If 0, then no acceptor threads will be launched and some other mechanism will need to be used to accept new connections.
-     * @param factories The {@link ConnectionFactory} instances to use
-//        super(server, null, null, null, -1, new HttpConnectionFactory());
      */
-    public AbstractConnector(
-        Server server)
-/*
-        Server server,
-        Executor executor,
-        Scheduler scheduler,
-        ByteBufferPool bufferPool,
-        int acceptors,
-        ConnectionFactory... factories)
-*/
+    public AbstractConnector(Server server)
     {
         _server = Objects.requireNonNull(server);
-/*
-        _executor = executor != null ? executor : _server.getThreadPool();
-        installBean(_executor, executor != null);
-
-        _scheduler = scheduler != null ? scheduler : _server.getScheduler();
-        installBean(_scheduler, scheduler != null);
-
-        _bufferPool = bufferPool != null ? bufferPool : server.getByteBufferPool();
-        installBean(_bufferPool, bufferPool != null);
-*/
         _executor = _server.getThreadPool();
         installBean(_executor, false);
 
@@ -117,11 +95,7 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
         _bufferPool = server.getByteBufferPool();
         installBean(_bufferPool, false);
 
-        ConnectionFactory factory = new HttpConnectionFactory();
-//        for (ConnectionFactory factory : factories)
-//        {
-            addConnectionFactory(factory);
-//        }
+        //addBean(_factory);
 
         _cores = Runtime.getRuntime().availableProcessors();
         _acceptors = new Thread[_cores];
@@ -252,10 +226,7 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
             !getServer().getBeans(ComplianceViolation.Listener.class).isEmpty())
             LOG.warn("ComplianceViolation.Listeners must now be set on HttpConfiguration");
 
-        getConnectionFactories().stream()
-            .filter(ConnectionFactory.Configuring.class::isInstance)
-            .map(ConnectionFactory.Configuring.class::cast)
-            .forEach(configuring -> configuring.configure(this));
+//        _factory.configure(this);
 
         _shutdown = new Shutdown(this)
         {
@@ -398,121 +369,6 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
         }
     }
 
-    public ConnectionFactory getConnectionFactory(String protocol)
-    {
-        try (AutoLock lock = _lock.lock())
-        {
-            return _factories.get(StringUtil.asciiToLowerCase(protocol));
-        }
-    }
-
-    public void addConnectionFactory(ConnectionFactory factory)
-    {
-        if (isRunning())
-            throw new IllegalStateException(getState());
-
-        Set<ConnectionFactory> toRemove = new HashSet<>();
-        for (String key : factory.getProtocols())
-        {
-            key = StringUtil.asciiToLowerCase(key);
-            ConnectionFactory old = _factories.remove(key);
-            if (old != null)
-            {
-//                if (old.getProtocol().equals(_defaultProtocol))
-//                    _defaultProtocol = null;
-                toRemove.add(old);
-            }
-            _factories.put(key, factory);
-        }
-
-        // keep factories still referenced
-        for (ConnectionFactory f : _factories.values())
-        {
-            toRemove.remove(f);
-        }
-
-        // remove old factories
-        for (ConnectionFactory old : toRemove)
-        {
-            removeBean(old);
-            if (LOG.isDebugEnabled())
-                LOG.debug("{} removed {}", this, old);
-        }
-
-        // add new Bean
-        addBean(factory);
-//        if (_defaultProtocol == null)
-//            _defaultProtocol = factory.getProtocol();
-        if (LOG.isDebugEnabled())
-            LOG.debug("{} added {}", this, factory);
-    }
-
-    public void addFirstConnectionFactory(ConnectionFactory factory)
-    {
-        if (isRunning())
-            throw new IllegalStateException(getState());
-
-        List<ConnectionFactory> existings = new ArrayList<>(_factories.values());
-        clearConnectionFactories();
-        addConnectionFactory(factory);
-        for (ConnectionFactory existing : existings)
-        {
-            addConnectionFactory(existing);
-        }
-    }
-
-    // Used from XML, do not remove.
-    public void addIfAbsentConnectionFactory(ConnectionFactory factory)
-    {
-        if (isRunning())
-            throw new IllegalStateException(getState());
-
-        String key = StringUtil.asciiToLowerCase(factory.getProtocol());
-        if (!_factories.containsKey(key))
-            addConnectionFactory(factory);
-    }
-
-    public ConnectionFactory removeConnectionFactory(String protocol)
-    {
-        if (isRunning())
-            throw new IllegalStateException(getState());
-
-        ConnectionFactory factory = _factories.remove(StringUtil.asciiToLowerCase(protocol));
-        removeBean(factory);
-        return factory;
-    }
-
-    @Override
-    public Collection<ConnectionFactory> getConnectionFactories()
-    {
-        return _factories.values();
-    }
-
-    public void setConnectionFactories(Collection<ConnectionFactory> factories)
-    {
-        if (isRunning())
-            throw new IllegalStateException(getState());
-
-        List<ConnectionFactory> existing = new ArrayList<>(_factories.values());
-        for (ConnectionFactory factory : existing)
-        {
-            removeConnectionFactory(factory.getProtocol());
-        }
-        for (ConnectionFactory factory : factories)
-        {
-            if (factory != null)
-                addConnectionFactory(factory);
-        }
-    }
-
-    public void clearConnectionFactories()
-    {
-        if (isRunning())
-            throw new IllegalStateException(getState());
-
-        _factories.clear();
-    }
-
     @ManagedAttribute("The priority delta to apply to acceptor threads")
     public int getAcceptorPriorityDelta()
     {
@@ -539,13 +395,6 @@ public abstract class AbstractConnector extends ContainerLifeCycle implements Co
                 thread.setPriority(Math.max(Thread.MIN_PRIORITY, Math.min(Thread.MAX_PRIORITY, thread.getPriority() - old + acceptorPriorityDelta)));
             }
         }
-    }
-
-    @Override
-    @ManagedAttribute("Protocols supported by this connector")
-    public List<String> getProtocols()
-    {
-        return new ArrayList<>(_factories.keySet());
     }
 
     protected boolean handleAcceptFailure(Throwable ex)

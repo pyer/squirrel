@@ -33,8 +33,6 @@ public interface ConnectionMetaData extends Attributes
 
     HttpVersion getHttpVersion();
 
-    String getProtocol();
-
     // TODO should this be only here or only on HttpChannel, should not be on both.
     Connection getConnection();
 
@@ -113,12 +111,6 @@ public interface ConnectionMetaData extends Attributes
         public HttpVersion getHttpVersion()
         {
             return getWrapped().getHttpVersion();
-        }
-
-        @Override
-        public String getProtocol()
-        {
-            return getWrapped().getProtocol();
         }
 
         @Override
