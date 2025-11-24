@@ -78,10 +78,9 @@ import static ab.squirrel.http.HttpStatus.INTERNAL_SERVER_ERROR_500;
 /**
  * <p>A {@link Connection} that handles the HTTP protocol.</p>
  */
-public class HttpConnection extends AbstractConnection implements Runnable, Connection.UpgradeFrom, Connection.UpgradeTo, ConnectionMetaData
+public class HttpConnection extends AbstractConnection implements Runnable, ConnectionMetaData
 {
     private static final Logger LOG = LoggerFactory.getLogger(HttpConnection.class);
-    private static final HttpField PREAMBLE_UPGRADE_H2C = new HttpField(HttpHeader.UPGRADE, "h2c");
     private static final ThreadLocal<HttpConnection> __currentConnection = new ThreadLocal<>();
     private static final AtomicLong __connectionIdGenerator = new AtomicLong();
 
@@ -322,26 +321,6 @@ public class HttpConnection extends AbstractConnection implements Runnable, Conn
         _useOutputDirectByteBuffers = useOutputDirectByteBuffers;
     }
 
-    @Override
-    public ByteBuffer onUpgradeFrom()
-    {
-        if (!isRequestBufferEmpty())
-        {
-            ByteBuffer unconsumed = ByteBuffer.allocateDirect(_retainableByteBuffer.remaining());
-            unconsumed.put(_retainableByteBuffer.getByteBuffer());
-            unconsumed.flip();
-            releaseRequestBuffer();
-            return unconsumed;
-        }
-        return null;
-    }
-
-    @Override
-    public void onUpgradeTo(ByteBuffer buffer)
-    {
-        BufferUtil.append(getRequestBuffer(), buffer);
-    }
-
     void releaseRequestBuffer()
     {
         if (_retainableByteBuffer != null && !_retainableByteBuffer.hasRemaining())
@@ -419,13 +398,6 @@ public class HttpConnection extends AbstractConnection implements Runnable, Conn
                         break;
                     }
 
-                    // If the request is complete, but has been upgraded, then break
-                    if (getEndPoint().getConnection() != this)
-                    {
-                        if (LOG.isDebugEnabled())
-                            LOG.debug("upgraded {} -> {}", this, getEndPoint().getConnection());
-                        break;
-                    }
                 }
                 else if (filled < 0)
                 {
@@ -1078,11 +1050,9 @@ public class HttpConnection extends AbstractConnection implements Runnable, Conn
         private long _contentLength = -1;
         private HostPortHttpField _hostField;
         private MetaData.Request _request;
-        private HttpField _upgrade = null;
         private Content.Chunk _chunk;
         private boolean _connectionClose = false;
         private boolean _connectionKeepAlive = false;
-        private boolean _connectionUpgrade = false;
         private boolean _unknownExpectation = false;
         private boolean _expects100Continue = false;
 
@@ -1123,7 +1093,6 @@ public class HttpConnection extends AbstractConnection implements Runnable, Conn
                         _connectionClose |= field.contains(HttpHeaderValue.CLOSE.asString());
                         if (HttpVersion.HTTP_1_0.equals(_version))
                             _connectionKeepAlive |= field.contains(HttpHeader.KEEP_ALIVE.asString());
-                        _connectionUpgrade |= field.contains(HttpHeaderValue.UPGRADE.asString());
                         break;
 
                     case HOST:
@@ -1152,10 +1121,6 @@ public class HttpConnection extends AbstractConnection implements Runnable, Conn
                         }
                         break;
                     }
-
-                    case UPGRADE:
-                        _upgrade = field;
-                        break;
 
                     case CONTENT_LENGTH:
                         _contentLength = field.getLongValue();
@@ -1275,9 +1240,6 @@ public class HttpConnection extends AbstractConnection implements Runnable, Conn
 
                 case HTTP_2:
                 {
-                    // Allow prior knowledge "upgrade" to HTTP/2 only if the connector supports h2c.
-                    _upgrade = PREAMBLE_UPGRADE_H2C;
-
                     _parser.close();
                     throw new BadMessageException(HttpStatus.UPGRADE_REQUIRED_426, "Upgrade Required");
                 }

@@ -521,32 +521,6 @@ public abstract class AbstractEndPoint implements EndPoint
     }
 
     @Override
-    public void upgrade(Connection newConnection)
-    {
-        Connection oldConnection = getConnection();
-
-        ByteBuffer buffer = (oldConnection instanceof Connection.UpgradeFrom)
-            ? ((Connection.UpgradeFrom)oldConnection).onUpgradeFrom()
-            : null;
-        oldConnection.onClose(null);
-        oldConnection.getEndPoint().setConnection(newConnection);
-
-        if (LOG.isDebugEnabled())
-            LOG.debug("{} upgrading from {} to {} with {}",
-                this, oldConnection, newConnection, BufferUtil.toDetailString(buffer));
-
-        if (BufferUtil.hasContent(buffer))
-        {
-            if (newConnection instanceof Connection.UpgradeTo)
-                ((Connection.UpgradeTo)newConnection).onUpgradeTo(buffer);
-            else
-                throw new IllegalStateException("Cannot upgrade: " + newConnection + " does not implement " + Connection.UpgradeTo.class.getName());
-        }
-
-        newConnection.onOpen();
-    }
-
-    @Override
     public String toString()
     {
         return String.format("%s@%x[%s]->[%s]", getClass().getSimpleName(), hashCode(), toEndPointString(), toConnectionString());
@@ -565,8 +539,6 @@ public abstract class AbstractEndPoint implements EndPoint
     public String toConnectionString()
     {
         Connection connection = getConnection();
-        if (connection == null) // can happen during upgrade
-            return "<null>";
         if (connection instanceof AbstractConnection)
             return ((AbstractConnection)connection).toConnectionString();
         return String.format("%s@%x", connection.getClass().getSimpleName(), connection.hashCode());

@@ -255,7 +255,6 @@ public interface EndPoint extends Closeable
     /**
      * @param connection the {@link Connection} associated with this EndPoint
      * @see #getConnection()
-     * @see #upgrade(Connection)
      */
     void setConnection(Connection connection);
 
@@ -273,22 +272,6 @@ public interface EndPoint extends Closeable
      * @see #onOpen()
      */
     void onClose(Throwable cause);
-
-    /**
-     * <p>Upgrades this EndPoint from the current connection to the given new connection.</p>
-     * <p>Closes the current connection, links this EndPoint to the new connection and
-     * then opens the new connection.</p>
-     * <p>If the current connection is an instance of {@link Connection.UpgradeFrom} then
-     * a buffer of unconsumed bytes is requested.
-     * If the buffer of unconsumed bytes is non-null and non-empty, then the new
-     * connection is tested: if it is an instance of {@link Connection.UpgradeTo}, then
-     * the unconsumed buffer is passed to the new connection; otherwise, an exception
-     * is thrown since there are unconsumed bytes that cannot be consumed by the new
-     * connection.</p>
-     *
-     * @param newConnection the connection to upgrade to
-     */
-    void upgrade(Connection newConnection);
 
     /**
      * <p>A communication conduit between two peers.</p>

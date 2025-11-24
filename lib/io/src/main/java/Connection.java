@@ -96,51 +96,6 @@ public interface Connection extends Closeable
     long getCreatedTimeStamp();
 
     /**
-     * <p>{@link Connection} implementations implement this interface when they
-     * can upgrade from the protocol they speak (for example HTTP/1.1)
-     * to a different protocol (e.g. HTTP/2).</p>
-     *
-     * @see EndPoint#upgrade(Connection)
-     * @see UpgradeTo
-     */
-    interface UpgradeFrom
-    {
-        /**
-         * <p>Invoked during an {@link EndPoint#upgrade(Connection) upgrade}
-         * to produce a buffer containing bytes that have not been consumed by
-         * this connection, and that must be consumed by the upgrade-to
-         * connection.</p>
-         *
-         * @return a buffer of unconsumed bytes to pass to the upgrade-to connection.
-         * The buffer does not belong to any pool and should be discarded after
-         * having consumed its bytes.
-         * The returned buffer may be null if there are no unconsumed bytes.
-         */
-        ByteBuffer onUpgradeFrom();
-    }
-
-    /**
-     * <p>{@link Connection} implementations implement this interface when they
-     * can be upgraded to the protocol they speak (e.g. HTTP/2)
-     * from a different protocol (e.g. HTTP/1.1).</p>
-     */
-    interface UpgradeTo
-    {
-        /**
-         * <p>Invoked during an {@link EndPoint#upgrade(Connection) upgrade}
-         * to receive a buffer containing bytes that have not been consumed by
-         * the upgrade-from connection, and that must be consumed by this
-         * connection.</p>
-         *
-         * @param buffer a non-null buffer of unconsumed bytes received from
-         * the upgrade-from connection.
-         * The buffer does not belong to any pool and should be discarded after
-         * having consumed its bytes.
-         */
-        void onUpgradeTo(ByteBuffer buffer);
-    }
-
-    /**
      * <p>A Listener for connection events.</p>
      * <p>Listeners can be added to a {@link Connection} to get open and close events.
      * </p>

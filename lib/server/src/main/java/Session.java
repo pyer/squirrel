@@ -112,41 +112,4 @@ public interface Session extends Attributes
 
     String encodeURI(Request request, String uri, boolean cookiesInUse);
 
-    /**
-     * Listener interface that if implemented by a value of an attribute of an enclosing {@link Context} at start, will be
-     * notified of session lifecycle events.
-     */
-    interface LifeCycleListener
-    {
-        default void onSessionIdChanged(Session session, String oldId)
-        {
-        }
-
-        default void onSessionCreated(Session session)
-        {
-        }
-
-        default void onSessionDestroyed(Session session)
-        {
-        }
-    }
-
-    /**
-     * Listener interface that if implemented by a session attribute value, will be notified of
-     * session value events.
-     */
-    interface ValueListener
-    {
-        default void onSessionAttributeUpdate(Session session, String name, Object oldValue, Object newValue)
-        {
-        }
-
-        default void onSessionActivation(Session session)
-        {
-        }
-
-        default void onSessionPassivation(Session session)
-        {
-        }
-    }
 }
