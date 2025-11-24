@@ -48,7 +48,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ManagedObject("Abstract implementation of the Connector Interface")
-//public abstract class AbstractNetworkConnector extends AbstractConnector implements NetworkConnector
 public abstract class AbstractConnector extends ContainerLifeCycle implements Connector
 {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractConnector.class);

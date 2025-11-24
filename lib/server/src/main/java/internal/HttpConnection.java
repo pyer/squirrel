@@ -17,6 +17,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritePendingException;
+import java.net.SocketAddress;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -46,13 +47,13 @@ import ab.squirrel.http.HttpVersion;
 import ab.squirrel.http.MetaData;
 import ab.squirrel.http.Trailers;
 import ab.squirrel.http.UriCompliance;
+import ab.squirrel.io.AbstractConnection;
 import ab.squirrel.io.ByteBufferPool;
 import ab.squirrel.io.Connection;
 import ab.squirrel.io.Content;
 import ab.squirrel.io.EndPoint;
 import ab.squirrel.io.RetainableByteBuffer;
 import ab.squirrel.io.RuntimeIOException;
-import ab.squirrel.server.AbstractMetaDataConnection;
 import ab.squirrel.server.ConnectionMetaData;
 import ab.squirrel.server.Connector;
 import ab.squirrel.server.HttpChannel;
@@ -77,7 +78,7 @@ import static ab.squirrel.http.HttpStatus.INTERNAL_SERVER_ERROR_500;
 /**
  * <p>A {@link Connection} that handles the HTTP protocol.</p>
  */
-public class HttpConnection extends AbstractMetaDataConnection implements Runnable, Connection.UpgradeFrom, Connection.UpgradeTo, ConnectionMetaData
+public class HttpConnection extends AbstractConnection implements Runnable, Connection.UpgradeFrom, Connection.UpgradeTo, ConnectionMetaData
 {
     private static final Logger LOG = LoggerFactory.getLogger(HttpConnection.class);
     private static final HttpField PREAMBLE_UPGRADE_H2C = new HttpField(HttpHeader.UPGRADE, "h2c");
@@ -107,6 +108,11 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
     private boolean _useInputDirectByteBuffers;
     private boolean _useOutputDirectByteBuffers;
 
+    private final Connector _connector;
+    private final HttpConfiguration _httpConfiguration;
+    private final SocketAddress _localSocketAddress;
+    private final SocketAddress _remoteSocketAddress;
+
     /**
      * Get the current connection that this thread is dispatched to.
      * Note that a thread may be processing a request asynchronously and
@@ -129,7 +135,12 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
 
     public HttpConnection(HttpConfiguration configuration, Connector connector, EndPoint endPoint)
     {
-        super(connector, configuration, endPoint);
+        super(endPoint, connector.getExecutor());
+        _connector = connector;
+        _httpConfiguration = configuration;
+        _localSocketAddress = configuration.getLocalAddress() != null ? configuration.getLocalAddress() : endPoint.getLocalSocketAddress();
+        _remoteSocketAddress = endPoint.getRemoteSocketAddress();
+
         _id = __connectionIdGenerator.getAndIncrement();
         _bufferPool = connector.getByteBufferPool();
         _generator = newHttpGenerator();
@@ -186,6 +197,36 @@ public class HttpConnection extends AbstractMetaDataConnection implements Runnab
     public HttpGenerator getGenerator()
     {
         return _generator;
+    }
+
+    @Override
+    public SocketAddress getRemoteSocketAddress()
+    {
+        return _remoteSocketAddress;
+    }
+
+    @Override
+    public SocketAddress getLocalSocketAddress()
+    {
+        return _localSocketAddress;
+    }
+
+    @Override
+    public HttpConfiguration getHttpConfiguration()
+    {
+        return _httpConfiguration;
+    }
+
+    @Override
+    public Connection getConnection()
+    {
+        return this;
+    }
+
+    @Override
+    public Connector getConnector()
+    {
+        return _connector;
     }
 
     @Override
