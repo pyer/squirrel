@@ -81,48 +81,6 @@ public interface Retainable
     }
 
     /**
-     * A wrapper of {@link Retainable} instances.
-     */
-    class Wrapper implements Retainable
-    {
-        private final Retainable wrapped;
-
-        public Wrapper(Retainable wrapped)
-        {
-            this.wrapped = Objects.requireNonNull(wrapped);
-        }
-
-        public Retainable getWrapped()
-        {
-            return wrapped;
-        }
-
-        @Override
-        public boolean canRetain()
-        {
-            return getWrapped().canRetain();
-        }
-
-        @Override
-        public void retain()
-        {
-            getWrapped().retain();
-        }
-
-        @Override
-        public boolean release()
-        {
-            return getWrapped().release();
-        }
-
-        @Override
-        public String toString()
-        {
-            return "%s@%x[%s]".formatted(getClass().getSimpleName(), hashCode(), getWrapped());
-        }
-    }
-
-    /**
      * <p>A reference count implementation for a {@link Retainable} resource.</p>
      * <p>The reference count is initialized to 1 when the resource is created,
      * and therefore it is implicitly retained and needs a call to {@link #release()}.</p>

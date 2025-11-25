@@ -62,17 +62,6 @@ import ab.squirrel.util.thread.Invocable;
 public interface EndPoint extends Closeable
 {
     /**
-     * Marks an {@code EndPoint} that wraps another {@code EndPoint}.
-     */
-    interface Wrapper
-    {
-        /**
-         * @return The wrapped {@code EndPoint}
-         */
-        EndPoint unwrap();
-    }
-
-    /**
      * @return the local SocketAddress to which this {@code EndPoint} is bound or {@code null}
      * if this {@code EndPoint} is not bound to a Socket address.
      */
@@ -273,19 +262,4 @@ public interface EndPoint extends Closeable
      */
     void onClose(Throwable cause);
 
-    /**
-     * <p>A communication conduit between two peers.</p>
-     */
-    interface Pipe
-    {
-        /**
-         * @return the {@link EndPoint} of the local peer
-         */
-        EndPoint getLocalEndPoint();
-
-        /**
-         * @return the {@link EndPoint} of the remote peer
-         */
-        EndPoint getRemoteEndPoint();
-    }
 }

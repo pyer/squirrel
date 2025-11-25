@@ -224,8 +224,6 @@ public class ArrayByteBufferPool implements ByteBufferPool
     public boolean removeAndRelease(RetainableByteBuffer buffer)
     {
         RetainableByteBuffer actual = buffer;
-        while (actual instanceof RetainableByteBuffer.Wrapper wrapper)
-            actual = wrapper.getWrapped();
 
         if (actual instanceof ReservedBuffer reservedBuffer)
         {

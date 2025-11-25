@@ -78,41 +78,12 @@ public interface ByteBufferPool
     void clear();
 
     /**
-     * <p>A wrapper for {@link ByteBufferPool} instances.</p>
-     */
-    class Wrapper implements ByteBufferPool
-    {
-        private final ByteBufferPool wrapped;
-
-        public Wrapper(ByteBufferPool wrapped)
-        {
-            this.wrapped = wrapped;
-        }
-
-        public ByteBufferPool getWrapped()
-        {
-            return wrapped;
-        }
-
-        @Override
-        public RetainableByteBuffer acquire(int size, boolean direct)
-        {
-            return getWrapped().acquire(size, direct);
-        }
-
-        @Override
-        public void clear()
-        {
-            getWrapped().clear();
-        }
-    }
-
-    /**
      * A ByteBufferPool with an additional no-args {@link #acquire()} method to obtain a buffer of a
      * preconfigured specific size and type.
      */
-    class Sized extends Wrapper
+    class Sized implements ByteBufferPool
     {
+        private final ByteBufferPool _wrapped;
         private final boolean _direct;
         private final int _size;
 
@@ -133,9 +104,29 @@ public interface ByteBufferPool
          */
         public Sized(ByteBufferPool wrapped, boolean direct, int size)
         {
-            super(Objects.requireNonNullElse(wrapped, NON_POOLING));
+            _wrapped = Objects.requireNonNullElse(wrapped, NON_POOLING);
             _direct = direct;
             _size = size > 0 ? size : 4096;
+        }
+
+        /**
+         * @return A {@link RetainableByteBuffer} suitable for the specified preconfigured size and type.
+         */
+        public RetainableByteBuffer acquire()
+        {
+            return _wrapped.acquire(_size, _direct);
+        }
+
+        @Override
+        public RetainableByteBuffer acquire(int size, boolean direct)
+        {
+            return _wrapped.acquire(size, direct);
+        }
+
+        @Override
+        public void clear()
+        {
+            _wrapped.clear();
         }
 
         public boolean isDirect()
@@ -148,13 +139,6 @@ public interface ByteBufferPool
             return _size;
         }
 
-        /**
-         * @return A {@link RetainableByteBuffer} suitable for the specified preconfigured size and type.
-         */
-        public RetainableByteBuffer acquire()
-        {
-            return getWrapped().acquire(_size, _direct);
-        }
     }
 
     /**
